@@ -1,0 +1,117 @@
+Index: test/js/testEverythingBasic.js
+===================================================================
+--- test/js/testEverythingBasic.js	(revision 75)
++++ test/js/testEverythingBasic.js	(working copy)
+@@ -1,5 +1,8 @@
+ const Everything = imports.gi.Everything;
+ 
++// We use Gio to have some objects that we know exist
++const Gio = imports.gi.Gio;
++
+ const INT8_MIN = (-128);
+ const INT16_MIN = (-32767-1);
+ const INT32_MIN = (-2147483647-1);
+@@ -68,4 +71,12 @@
+     assertRaises(function() { return Everything.test_size(-42); });
+ }
+ 
++function testBadConstructor() {
++    try {
++	Gio.AppLaunchContext();
++    } catch (e) {
++	assert(e.message.indexOf("Constructor called as normal method") >= 0);
++    }
++}
++
+ gjstestRun();
+Index: gjs/jsapi-util.c
+===================================================================
+--- gjs/jsapi-util.c	(revision 75)
++++ gjs/jsapi-util.c	(working copy)
+@@ -384,6 +384,18 @@
+     return prototype;
+ }
+ 
++gboolean
++gjs_check_constructing (JSContext *context)
++{
++    if (!JS_IsConstructing(context)) {
++        gjs_throw(context,
++                  "Constructor called as normal method. Use 'new SomeObject()' not 'SomeObject()'");
++        return FALSE;
++    }
++
++    return TRUE;
++}
++
+ void*
+ gjs_get_instance_private_dynamic(JSContext      *context,
+                                  JSObject       *obj,
+Index: gjs/jsapi-util.h
+===================================================================
+--- gjs/jsapi-util.h	(revision 75)
++++ gjs/jsapi-util.h	(working copy)
+@@ -125,6 +125,7 @@
+                                               JSFunctionSpec  *fs,
+                                               JSPropertySpec  *static_ps,
+                                               JSFunctionSpec  *static_fs);
++gboolean    gjs_check_constructing           (JSContext       *context);
+ void*       gjs_get_instance_private_dynamic (JSContext       *context,
+                                               JSObject        *obj,
+                                               JSClass         *static_clasp,
+Index: gi/param.c
+===================================================================
+--- gi/param.c	(revision 75)
++++ gi/param.c	(working copy)
+@@ -155,6 +155,9 @@
+     JSObject *proto;
+     gboolean is_proto;
+ 
++    if (!gjs_check_constructing(context))
++        return JS_FALSE;
++
+     priv = g_slice_new0(Param);
+ 
+     GJS_INC_COUNTER(param);
+Index: gi/boxed.c
+===================================================================
+--- gi/boxed.c	(revision 75)
++++ gi/boxed.c	(working copy)
+@@ -211,6 +211,9 @@
+     JSObject *proto;
+     gboolean is_proto;
+ 
++    if (!gjs_check_constructing(context))
++        return JS_FALSE;
++
+     priv = g_slice_new0(Boxed);
+ 
+     GJS_INC_COUNTER(boxed);
+Index: gi/object.c
+===================================================================
+--- gi/object.c	(revision 75)
++++ gi/object.c	(working copy)
+@@ -617,6 +617,9 @@
+     JSClass *obj_class;
+     JSClass *proto_class;
+ 
++    if (!gjs_check_constructing(context))
++        return JS_FALSE;
++
+     priv = g_slice_new0(ObjectInstance);
+ 
+     GJS_INC_COUNTER(object);
+Index: gi/union.c
+===================================================================
+--- gi/union.c	(revision 75)
++++ gi/union.c	(working copy)
+@@ -211,6 +211,9 @@
+     JSObject *proto;
+     gboolean is_proto;
+ 
++    if (!gjs_check_constructing(context))
++        return JS_FALSE;
++
+     priv = g_slice_new0(Union);
+ 
+     GJS_INC_COUNTER(boxed);

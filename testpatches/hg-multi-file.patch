@@ -1,0 +1,50 @@
+# HG changeset patch
+# User Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+# Date 1228243003 -3600
+# Node ID 3342e6ada4b9abe8115941f8078f0f2604a9210a
+# Parent  3fb5c142a9f073b27c5ea07a9ac4fb540640b3ed
+push: use the fast changegroup() path on push
+
+The race doesn't happen on push (because the discovery is done
+in the same hg process), so use the fast path instead.
+
+diff -r 3fb5c142a9f0 -r 3342e6ada4b9 mercurial/localrepo.py
+--- a/mercurial/localrepo.py	Mon Dec 01 10:45:22 2008 -0500
++++ b/mercurial/localrepo.py	Tue Dec 02 19:36:43 2008 +0100
+@@ -1496,11 +1496,11 @@
+         return self.push_addchangegroup(remote, force, revs)
+ 
+     def prepush(self, remote, force, revs):
+-        base = {}
++        common = {}
+         remote_heads = remote.heads()
+-        inc = self.findincoming(remote, base, remote_heads, force=force)
++        inc = self.findincoming(remote, common, remote_heads, force=force)
+ 
+-        update, updated_heads = self.findoutgoing(remote, base, remote_heads)
++        update, updated_heads = self.findoutgoing(remote, common, remote_heads)
+         if revs is not None:
+             msng_cl, bases, heads = self.changelog.nodesbetween(update, revs)
+         else:
+@@ -1546,7 +1546,8 @@
+ 
+ 
+         if revs is None:
+-            cg = self.changegroup(update, 'push')
++            # use the fast path, no race possible on push
++            cg = self._changegroup(common.keys(), 'push')
+         else:
+             cg = self.changegroupsubset(update, revs, 'push')
+         return cg, remote_heads
+diff -r 3fb5c142a9f0 -r 3342e6ada4b9 tests/test-push-warn.out
+--- a/tests/test-push-warn.out	Mon Dec 01 10:45:22 2008 -0500
++++ b/tests/test-push-warn.out	Tue Dec 02 19:36:43 2008 +0100
+@@ -22,7 +22,7 @@
+ adding changesets
+ adding manifests
+ adding file changes
+-added 2 changesets with 1 changes to 2 files
++added 2 changesets with 1 changes to 1 files
+ adding foo
+ updating working directory
+ 1 files updated, 0 files merged, 0 files removed, 0 files unresolved

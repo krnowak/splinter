@@ -1,0 +1,144 @@
+include('Patch');
+include('TestUtils');
+
+let assertEquals = TestUtils.assertEquals;
+
+let patch;
+let file;
+let hunk;
+
+function hunkToString(hunk) {
+    var data = [];
+    hunk.iterate(function(location, oldLine, oldText, newLine, newText, flags) {
+                     var oldOp = '';
+                     var newOp = '';
+
+	             if ((flags & Patch.CHANGED) != 0)
+	                 oldOp = newOp = '!';
+	             else if ((flags & Patch.REMOVED) != 0)
+	                 oldOp = '-';
+	             else if ((flags & Patch.ADDED) != 0)
+	                 newOp = '+';
+	             if ((flags & Patch.OLD_NONEWLINE) != 0)
+	                 oldOp += '*';
+	             if ((flags & Patch.NEW_NONEWLINE) != 0)
+	                 newOp += '*';
+                     data.push([oldText != null ? oldOp   : '',
+                                oldText != null ? oldLine : '',
+                                oldText != null ? oldText : '',
+                                newText != null ? newOp   : '',
+                                newText != null ? newLine : '',
+                                newText != null ? newText : '']);
+
+                 });
+
+    return ('@@ -' + hunk.oldStart + ',' + hunk.oldCount + ' +' + hunk.newStart + ',' + hunk.newCount + '\n' +
+            TestUtils.table('lrllrl', data));
+}
+
+function fileToString(file) {
+    return ('::: ' + file.filename + '\n' +
+            [hunkToString(hunk) for each (hunk in file.hunks)].join(""));
+}
+
+function patchToString(patch) {
+    return [fileToString(file) for each (file in patch.files)].join("\n");
+}
+
+patch = new Patch.Patch(<<<
+Git output looks like
+
+diff --git a/js/ui/main.js b/js/ui/main.js
+index 882e34b..4832d31 100644
+--- a/js/ui/main.js
++++ b/js/ui/main.js
+@@ -1,6 +1,6 @@
+ const Shell = imports.gi.Shell;
++const Signals = imports.signals;
+ const Clutter = imports.gi.Clutter;
+-const Tweener = imports.tweener.tweener;
++const Animation = imports.gi.Animation
+ const Panel = imports.ui.panel;
+-const Overview = imports.ui.overview;
+ const Utils. = imports.ui.utils;
+-- 
+1.6.0.3
+>>>)
+
+assertEquals(<<<
+::: js/ui/main.js
+@@ -1,6 +1,6
+  1 const Shell = imports.gi.Shell;            1 const Shell = imports.gi.Shell;
+                                             + 2 const Signals = imports.signals;
+  2 const Clutter = imports.gi.Clutter;        3 const Clutter = imports.gi.Clutter;
+! 3 const Tweener = imports.tweener.tweener; ! 4 const Animation = imports.gi.Animation
+  4 const Panel = imports.ui.panel;            5 const Panel = imports.ui.panel;
+- 5 const Overview = imports.ui.overview;
+  6 const Utils. = imports.ui.utils;           6 const Utils. = imports.ui.utils;
+>>>, patchToString(patch))
+
+patch = new Patch.Patch(<<<
+https://launchpad.net/~gnome-doc-centric-playground
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_panel_widgets.py'
+--- src/zeitgeist_gui/zeitgeist_panel_widgets.py        2008-11-20 02:46:24 +0000
++++ src/zeitgeist_gui/zeitgeist_panel_widgets.py        2008-11-20 21:14:40 +0000
+@@ -1,5 +1,9 @@
+-import zeitgeist_engine.zeitgeist_datasink
+-import zeitgeist_engine.zeitgeist_util
++import datetime
+ import gc
++import os
+ import time
++
++import zeitgeist_engine.zeitgeist_datasink
++import zeitgeist_engine.zeitgeist_util
++
+ class TimelineWidget(gtk.HBox):
+@@ -514,2 +514,2 @@
+ calendar = CalendarWidget()
+-timeline = TimelineWidget()
+\ No newline at end of file
++timeline = TimelineWidget()
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_calendar_gui.py'
+--- src/zeitgeist_gui/zeitgeist_calendar_gui.py	2008-11-19 18:43:27 +0000
++++ src/zeitgeist_gui/zeitgeist_calendar_gui.py	2008-11-20 21:27:45 +0000
+@@ -11,5 +11,4 @@
+ import gtk
+ import gtk.glade
+-import datetime
+ import zeitgeist_engine.zeitgeist_util
+ 
+
+>>>);
+
+assertEquals(<<<
+::: src/zeitgeist_gui/zeitgeist_panel_widgets.py
+@@ -1,5 +1,9
+! 1 import zeitgeist_engine.zeitgeist_datasink ! 1 import datetime
+! 2 import zeitgeist_engine.zeitgeist_util
+  3 import gc                                    2 import gc
+                                               + 3 import os
+  4 import time                                  4 import time
+                                               + 5
+                                               + 6 import zeitgeist_engine.zeitgeist_datasink
+                                               + 7 import zeitgeist_engine.zeitgeist_util
+                                               + 8
+  5 class TimelineWidget(gtk.HBox):              9 class TimelineWidget(gtk.HBox):
+@@ -514,2 +514,2
+   514 calendar = CalendarWidget()   514 calendar = CalendarWidget()
+!* 515 timeline = TimelineWidget() ! 515 timeline = TimelineWidget()
+
+::: src/zeitgeist_gui/zeitgeist_calendar_gui.py
+@@ -11,5 +11,4
+  11 import gtk                              11 import gtk
+  12 import gtk.glade                        12 import gtk.glade
+- 13 import datetime
+  14 import zeitgeist_engine.zeitgeist_util  13 import zeitgeist_engine.zeitgeist_util
+  15                                         14
+>>>, patchToString(patch));
+
+file = patch.getFile('src/zeitgeist_gui/zeitgeist_panel_widgets.py');
+assertEquals(file.getLocation(515, 515), 11);
+

@@ -1,0 +1,34 @@
+https://launchpad.net/~gnome-doc-centric-playground
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_panel_widgets.py'
+--- src/zeitgeist_gui/zeitgeist_panel_widgets.py	2008-11-20 02:46:24 +0000
++++ src/zeitgeist_gui/zeitgeist_panel_widgets.py	2008-11-20 21:14:40 +0000
+@@ -514,22 +514,20 @@
+         gc.collect()
+         
+     def _set_item(self, item):
+-        
+-        name =item.get_name()
++        name = item.get_name()
+         comment = "<span size='large' color='red'>%s</span>" % item.get_comment() #+ "  <span size='small' color='blue'> %s </span>" % str(item.count)
+-        #text = name + "\n"  + comment 
+-        count="<span size='small' color='blue'>%s</span>" %  item.count
++        count = "<span size='small' color='blue'>%s</span>" %  item.count
+         try:
+             icon = item.get_icon(24)
+         except (AssertionError, AttributeError):
+             print("exception")
+             icon = None
+         
+-        self.store.append([comment,icon,name,count,item])
++        self.store.append([None, icon, name, count, item])
+         
+         #del icon,name,comment,text
+         
+ 
+ 
+ calendar = CalendarWidget()
+-timeline = TimelineWidget()
+\ No newline at end of file
++timeline = TimelineWidget()
+

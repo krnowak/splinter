@@ -1,0 +1,31 @@
+Reviews are comments that start with the text "Review of attachment <attachment_id>:"
+
+The review can start with free form comments that apply to the whole patch.
+A line of the form ::: <filename> introduces comments about a particular file
+
+Each comment is introduced by a small amount of context, which is formatted as
+a unified diff hunk.
+
+Example:
+
+==========
+Review of attachment 123042:
+
+<overall comments>
+
+::: foo/bar/somefile.c
+@@ -264,2 +264,3 @@ gjs_invoke_c_function(JSContext      *context,
++    return_values = NULL; /* Quiet gcc warning about initialization */
+     if (n_return_values > 0) {
+         if (invoke_ok) {
+
+<comment on change >
+
+@@ -318,1 +317,1 @@ import_file(JSContext  *context,
+-    if (!finish_import(context, obj))
++    if (!finish_import(context, name))
+
+<comment on change>
+==========
+
+

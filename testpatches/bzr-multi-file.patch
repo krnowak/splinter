@@ -1,0 +1,235 @@
+https://launchpad.net/~gnome-doc-centric-playground
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_base.py'
+--- src/zeitgeist_engine/zeitgeist_base.py	2008-11-19 22:56:01 +0000
++++ src/zeitgeist_engine/zeitgeist_base.py	2008-11-20 21:27:45 +0000
+@@ -1,13 +1,13 @@
+-
+ import datetime
++import gc
+ import string
++import sys
+ import time
+-from gettext import ngettext, gettext as _
+ from threading import Thread
++
+ import gobject
+ import gtk
+-import gc
+-import sys
++from gettext import ngettext, gettext as _
+ 
+ from zeitgeist_util import Thumbnailer,  icon_factory, launcher
+ 
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_datasink.py'
+--- src/zeitgeist_engine/zeitgeist_datasink.py	2008-11-20 02:46:24 +0000
++++ src/zeitgeist_engine/zeitgeist_datasink.py	2008-11-20 21:27:45 +0000
+@@ -1,12 +1,13 @@
+-#!/usr/bin/env python
++import sys
++import time
++import urllib
++
++from gettext import gettext as _
++
+ from zeitgeist_engine.zeitgeist_base import ItemSource
+ from zeitgeist_engine.zeitgeist_firefox import FirefoxSource
+ from zeitgeist_engine.zeitgeist_tomboy import TomboySource
+ from zeitgeist_engine.zeitgeist_recent import *
+-from gettext import gettext as _
+-import urllib
+-import time
+-import sys
+ 
+ class DataSinkSource(ItemSource):
+     def __init__(self, note_path=None):
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_firefox.py'
+--- src/zeitgeist_engine/zeitgeist_firefox.py	2008-11-19 18:43:27 +0000
++++ src/zeitgeist_engine/zeitgeist_firefox.py	2008-11-20 21:27:45 +0000
+@@ -2,17 +2,17 @@
+ import os
+ import re
+ import glob
+-import sqlite3 as db
+-from gettext import gettext as _
+ from xml.dom.minidom import parse
+ from xml.parsers.expat import ExpatError
+ 
++import gnomevfs
+ import gobject
+ import gtk
+-import gnomevfs
++import shutil
++import sqlite3 as db
++import tempfile
+ import W3CDate
+-import tempfile
+-import shutil
++from gettext import gettext as _
+ 
+ from zeitgeist_base import Item, ItemSource
+ from zeitgeist_util import FileMonitor, launcher
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_recent.py'
+--- src/zeitgeist_engine/zeitgeist_recent.py	2008-11-19 18:43:27 +0000
++++ src/zeitgeist_engine/zeitgeist_recent.py	2008-11-20 21:27:45 +0000
+@@ -1,17 +1,19 @@
++import datetime
++import gc
++import os
+ import re
+ import sys
+-import gc
++import time
++import urllib
+ import urlparse
+-import datetime
+-import os
+-import urllib
+-import time
+-from gettext import gettext as _
+-import gobject
+-import gtk
++
+ import gnome.ui
+ import gnomevfs
+ import gnomevfs.async
++import gobject
++import gtk
++from gettext import gettext as _
++
+ from zeitgeist_base import Item, ItemSource
+ 
+ class RecentlyUsedManagerGtk(ItemSource):
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_tomboy.py'
+--- src/zeitgeist_engine/zeitgeist_tomboy.py	2008-11-19 22:37:12 +0000
++++ src/zeitgeist_engine/zeitgeist_tomboy.py	2008-11-20 21:27:45 +0000
+@@ -1,8 +1,6 @@
+-
+ import datetime
+ import os
+ import re
+-from gettext import gettext as _
+ from xml.dom.minidom import parse
+ from xml.parsers.expat import ExpatError
+ 
+@@ -10,6 +8,7 @@
+ import gtk
+ import gnomevfs
+ import W3CDate
++from gettext import gettext as _
+ 
+ from zeitgeist_base import Item, ItemSource
+ from zeitgeist_util import FileMonitor, launcher
+
+=== modified file 'src/zeitgeist_engine/zeitgeist_util.py'
+--- src/zeitgeist_engine/zeitgeist_util.py	2008-11-19 18:43:27 +0000
++++ src/zeitgeist_engine/zeitgeist_util.py	2008-11-20 21:27:45 +0000
+@@ -1,16 +1,17 @@
+ import datetime
++import gc
+ import os
+ import urllib
+-from gettext import gettext as _
+ import sys     # for ImplementMe
+ import inspect # for ImplementMe
++
+ import dbus
+ import gobject
+ import gtk
+-import gc
+ import gnome.ui
+ import gnomevfs
+ import gconf
++from gettext import gettext as _
+ 
+ class FileMonitor(gobject.GObject):
+     '''
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_calendar_gui.py'
+--- src/zeitgeist_gui/zeitgeist_calendar_gui.py	2008-11-19 18:43:27 +0000
++++ src/zeitgeist_gui/zeitgeist_calendar_gui.py	2008-11-20 21:27:45 +0000
+@@ -11,7 +11,7 @@
+ import gobject
+ import gtk
+ import gtk.glade
+-import datetime
++
+ from zeitgeist_engine.zeitgeist_util import icon_factory, icon_theme, launcher
+ from zeitgeist_engine.zeitgeist_datasink import DataSinkSource
+ 
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_gui.py'
+--- src/zeitgeist_gui/zeitgeist_gui.py	2008-11-20 02:46:24 +0000
++++ src/zeitgeist_gui/zeitgeist_gui.py	2008-11-20 21:27:45 +0000
+@@ -1,24 +1,16 @@
+-#!/usr/bin/env python
++import datetime
++import math
++import sys
++import os
++
++import gtk
++import gtk.glade
++import gobject
++import gnomeapplet
++
+ from zeitgeist_panel_widgets import timeline,StarredWidget,FilterAndOptionBox,calendar
+ from zeitgeist_engine.zeitgeist_util import icon_factory, icon_theme, launcher
+ #from zeitgeist_calendar_gui import zeitgeistGUI
+-import sys
+-import os
+-import gnomeapplet
+-
+-import datetime
+-import math
+-try:
+-     import pygtk
+-     pygtk.require("2.0")
+-except:
+-      pass
+-try:
+-    import gtk
+-    import gtk.glade
+-except:
+-    sys.exit(1)
+-import gobject
+ 
+ class zeitgeistGUI:   
+     
+@@ -75,4 +67,4 @@
+         self.topicWindow.add(self.mainbox)
+         self.topicWindow.show_all()
+         
+-    
+\ No newline at end of file
++    
+
+=== modified file 'src/zeitgeist_gui/zeitgeist_panel_widgets.py'
+--- src/zeitgeist_gui/zeitgeist_panel_widgets.py	2008-11-20 21:14:40 +0000
++++ src/zeitgeist_gui/zeitgeist_panel_widgets.py	2008-11-20 21:27:45 +0000
+@@ -1,13 +1,15 @@
+-from zeitgeist_engine.zeitgeist_datasink import datasink
+-from zeitgeist_engine.zeitgeist_util import launcher
+-import pango
++import datetime
+ import gc
++import os
+ import time
++
+ import gtk
+ import gobject
+-import datetime
+-import os
++import pango
+  
++from zeitgeist_engine.zeitgeist_datasink import datasink
++from zeitgeist_engine.zeitgeist_util import launcher
++
+ class TimelineWidget(gtk.HBox):
+     
+     def __init__(self):
+

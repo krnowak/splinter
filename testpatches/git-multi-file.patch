@@ -1,0 +1,143 @@
+From f7111674a7f28067b5e295fe0068c95aa8551c4d Mon Sep 17 00:00:00 2001
+From: Owen W. Taylor <otaylor@fishsoup.net>
+Date: Thu, 13 Nov 2008 12:45:37 -0500
+Subject: [PATCH] =?utf-8?q?Bug=20560670=20=E2=80=93=20Turn=20on=20compilation=20warnings?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+configure.ac: Add -Wall and selected other warnings
+
+gjs/importer.c: Pass the right value to finish_import()
+gjs/jsapi-util.c: Reorder includes so that __GJS_UTIL_LOG_H__
+ gets defined before jsapi-util.h is included.
+
+gi/function.c: Initialize a variable to quiet GCC
+gi/arg.c: Remove unused variables, fix missing case labels and
+ return value in gjs_g_arg_release_in_arg()
+---
+ configure.ac     |   24 ++++++++++++++++++++++++
+ gi/arg.c         |   10 +++++-----
+ gi/function.c    |    1 +
+ gjs/importer.c   |    2 +-
+ gjs/jsapi-util.c |    6 +++---
+ 5 files changed, 34 insertions(+), 9 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 9e31ec4..1ad219b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -24,6 +24,30 @@ AM_DISABLE_STATIC
+ AC_PROG_LIBTOOL
+ dnl DOLT
+ 
++# Add extra warning flags
++changequote(,)dnl
++ensureflag() {
++  flag="$1"; shift
++  result="$@"
++
++  case " ${result} " in
++  *[\ \	]${flag}[\ \	]*) ;;
++  *) result="${flag} ${result}" ;;
++  esac
++
++  echo ${result}
++}
++changequote([,])dnl
++
++if test "$GCC" = "yes"; then
++    for flag in -Wall -Wchar-subscripts -Wmissing-declarations \
++        -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Wcast-align \
++        -Wsign-compare -fno-strict-aliasing;
++    do
++        CFLAGS="`ensureflag $flag $CFLAGS`"
++    done
++fi
++
+ # coverage
+ AC_ARG_ENABLE([coverage],
+               [AS_HELP_STRING([--enable-coverage],
+diff --git a/gi/arg.c b/gi/arg.c
+index b37e1a7..51da8f7 100644
+--- a/gi/arg.c
++++ b/gi/arg.c
+@@ -212,8 +212,6 @@ gjs_array_to_array(JSContext   *context,
+                    GITypeInfo  *param_info,
+                    void       **arr_p)
+ {
+-    guint32 i;
+-    jsval elem;
+     GITypeTag element_type;
+ 
+     element_type = g_type_info_get_tag(param_info);
+@@ -1126,7 +1124,7 @@ gjs_g_arg_release_in_arg(JSContext  *context,
+ 
+     /* we don't own the argument anymore */
+     if (transfer == GI_TRANSFER_EVERYTHING)
+-        return;
++        return JS_TRUE;
+ 
+     type_tag = g_type_info_get_tag( (GITypeInfo*) type_info);
+ 
+@@ -1143,8 +1141,10 @@ gjs_g_arg_release_in_arg(JSContext  *context,
+     case GI_TYPE_TAG_ARRAY:
+         return gjs_g_arg_release_internal(context, GI_TRANSFER_EVERYTHING,
+                                           type_info, type_tag, arg);
++    default:
++        return JS_TRUE;
+     }
+-
+-    return JS_TRUE;
+ }
+ 
++
++
+diff --git a/gi/function.c b/gi/function.c
+index 2ef8642..b8aae11 100644
+--- a/gi/function.c
++++ b/gi/function.c
+@@ -261,6 +261,7 @@ gjs_invoke_c_function(JSContext      *context,
+     if (return_tag != GI_TYPE_TAG_VOID)
+         n_return_values += 1;
+ 
++    return_values = NULL; /* Quiet gcc warning about initialization */
+     if (n_return_values > 0) {
+         if (invoke_ok) {
+             return_values = g_newa(jsval, n_return_values);
+diff --git a/gjs/importer.c b/gjs/importer.c
+index 5cb8bd8..bcd6d33 100644
+--- a/gjs/importer.c
++++ b/gjs/importer.c
+@@ -315,7 +315,7 @@ import_file(JSContext  *context,
+ 
+     g_free(script);
+ 
+-    if (!finish_import(context, obj))
++    if (!finish_import(context, name))
+         goto out;
+ 
+     retval = JS_TRUE;
+diff --git a/gjs/jsapi-util.c b/gjs/jsapi-util.c
+index db2186e..fe51441 100644
+--- a/gjs/jsapi-util.c
++++ b/gjs/jsapi-util.c
+@@ -23,12 +23,12 @@
+ 
+ #include <config.h>
+ 
+-#include "jsapi-util.h"
+-#include "context-jsapi.h"
+-
+ #include <util/log.h>
+ #include <util/glib.h>
+ 
++#include "jsapi-util.h"
++#include "context-jsapi.h"
++
+ #include <string.h>
+ 
+ typedef struct {
+-- 
+1.6.0.3
+

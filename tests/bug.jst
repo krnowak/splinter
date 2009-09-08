@@ -1,0 +1,45 @@
+/* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
+include('Bug');
+include('TestUtils');
+include('Utils');
+
+let assert = Utils.assert;
+let assertEquals = TestUtils.assertEquals;
+let assertDateEquals = TestUtils.assertDateEquals;
+
+let referenceDate = new Date('Wed Nov 21, 2008 00:22 UTC');
+
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-21 00:22  UTC'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-21 00:22 +0000'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-21 01:22 +0100'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-21 01:52 +0130'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-20 20:22 -0400'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-20 20:22  EDT'));
+assertDateEquals(referenceDate, Bug.parseDate('2008-11-20 19:52 -0430'));
+assertDateEquals(new Date('Sat Aug 29, 2009 14:03:00 UTC'),
+                 Bug.parseDate('2009-08-29 10:03:00 -0400'));
+
+let bugtext = load('testbugs/561745/bug.xml');
+let bug_561745 = Bug.Bug.fromText(bugtext);
+
+// This test is mostly testing the E4X parser which is different from the DOM/JQuery parser
+// we use on the web page.
+
+assertEquals('Use a Tweener "Frame Ticker" with a ClutterTimeline backend', bug_561745.shortDesc);
+assertEquals("otaylor@redhat.com", bug_561745.getReporter());
+assertDateEquals(new Date('Wed Nov 21, 2008 00:22 UTC'), bug_561745.creationDate);
+assertEquals(1, bug_561745.attachments.length);
+
+let attachment = bug_561745.attachments[0];
+assertEquals(123143, attachment.id);
+assert(attachment.isPatch);
+assert(!attachment.isObsolete);
+assertDateEquals(new Date('Wed Nov 21, 2008 00:22 UTC'), attachment.date);
+assertEquals('Use a Tweener "Frame Ticker" with a ClutterTimeline backend', attachment.description);
+
+assertEquals(5, bug_561745.comments.length);
+
+let comment = bug_561745.comments[0];
+assertEquals("otaylor@redhat.com", comment.getWho());
+assertEquals("Call Tweener.setFrameTicker()", comment.text.substring(0, 29));
+assertDateEquals(new Date('Wed Nov 21, 2008 00:22 UTC'), comment.date);

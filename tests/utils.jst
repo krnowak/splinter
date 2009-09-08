@@ -1,0 +1,42 @@
+/* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
+include('TestUtils');
+include('Utils');
+
+let assertEquals = TestUtils.assertEquals;
+
+assertEquals('a ', Utils.lstrip(' a '));
+assertEquals(' a', Utils.rstrip(' a '));
+assertEquals('a',  Utils.strip('a'));
+
+// ========================================
+
+let now = new Date();
+// A Sunday
+now.setFullYear(2009);
+now.setMonth(8);
+now.setDate(6);
+now.setHours(10);
+now.setMinutes(0);
+now.setSeconds(0);
+
+let then = new Date(now.getTime());
+
+// Short time in the past
+then.setHours(9);
+assertEquals(then.toLocaleTimeString(), Utils.formatDate(then, now));
+
+// Short time in the future
+then.setHours(11);
+assertEquals(then.toLocaleTimeString(), Utils.formatDate(then, now));
+
+// In the future and not today
+then.setDate(7);
+assertEquals(then.toLocaleDateString(), Utils.formatDate(then, now));
+
+// Less than 24 hours in the past, but not today
+then.setDate(5);
+assertEquals("Sat " + then.toLocaleTimeString(), Utils.formatDate(then, now));
+
+// Further in the past
+then.setMonth(7);
+assertEquals(then.toLocaleDateString(), Utils.formatDate(then, now));

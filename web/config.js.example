@@ -1,0 +1,6 @@
+configAttachmentStatuses = [
+    'none',
+    'reviewed',
+    'rejected',
+    'committed'
+];

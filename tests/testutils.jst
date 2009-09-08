@@ -1,0 +1,20 @@
+include('TestUtils')
+
+let assertEquals = TestUtils.assertEquals;
+
+let lalign = TestUtils.lalign;
+let ralign = TestUtils.ralign;
+
+assertEquals('ab   ', lalign('ab', 5));
+assertEquals('   ab', ralign('ab', 5));
+assertEquals('abcde', lalign('abcdefg', 5));
+assertEquals('cdefg', ralign('abcdefg', 5));
+
+assertEquals(<<<
+1  222 3
+42  15 15
+1    6 3213
+>>>, TestUtils.table('lrl',
+                     [[1,  222, 3],
+                     [42, 15, 15],
+                     [1,  6,  3213]]));

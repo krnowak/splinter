@@ -1,0 +1,125 @@
+body {
+    margin: 0px;
+}
+
+#loading {
+    padding: 0.5em;
+}
+
+#headers {
+    background: black;
+    color: white;
+    font-size: 80%;
+    padding: 0.5em;
+}
+
+#controls {
+    padding: 0.5em;
+}
+
+.review {
+    border: 1px solid black;
+    font-size: 90%;
+    margin-bottom: 1em;
+}
+
+.review-inner {
+    border-left: 10px solid blue;
+    padding: 0.5em;
+}
+
+#myComment {
+    width: 100%;
+    height: 10em;
+}
+
+#buttonBox {
+    float: right;
+}
+
+#buttonSeparator {
+    clear: both;
+}
+
+#files {
+   position: relative;
+   padding: 0.5em;
+}
+
+.file-label {
+    margin-top: 1em;
+    padding: 0.5em;
+}
+
+.file-label span {
+    border: 1px solid black;
+    padding: 0.5em;
+    background: #ccffff;
+}
+
+.hunk-header {
+    color: red;
+    border: 1px solid black;
+    background: #dddddd;
+}
+
+.old-line, .new-line {
+    white-space: pre;
+    font-family: "DejaVu Sans Mono", monospace;
+    font-size: 80%;
+    overflow: hidden;
+}
+
+.removed-line {
+    background: #ffccaa;;
+}
+
+.added-line {
+    background: #aaffcc;
+}
+
+.changed-line {
+    background: #aaccff;
+}
+
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.middle-column {
+    width: 3px;
+}
+
+.my-comment {
+    border: 1px solid black;
+}
+
+.my-comment td {
+    padding: 0px;
+}
+
+.my-comment div {
+    padding: 0.5em;
+    border-left: 10px solid green;
+    white-space: pre-wrap;
+}
+
+.comment {
+    border: 1px solid black;
+}
+
+.comment td {
+    padding: 0px;
+}
+
+.comment div {
+    padding: 0.5em;
+    border-left: 10px solid blue;
+    white-space: pre-wrap;
+}
+
+.comment-editor textarea {
+    width: 100%;
+}

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE bugzilla SYSTEM "http://bugzilla.gnome.org/bugzilla.dtd">
+<bugzilla version="2.20.5" urlbase="http://bugzilla.gnome.org/" maintainer="bugmaster@gnome.org" exporter="otaylor@redhat.com">
+
+    <bug>
+          <bug_id>561745</bug_id>
+          
+          <creation_ts>2008-11-21 00:22 UTC</creation_ts>
+          <short_desc>Use a Tweener "Frame Ticker" with a ClutterTimeline backend</short_desc>
+          <delta_ts>2008-11-23 04:15:58 UTC</delta_ts>
+          <reporter_accessible>1</reporter_accessible>
+          <cclist_accessible>1</cclist_accessible>
+          <classification_id>8</classification_id>
+          <classification>Other</classification>
+          <product>gnome-shell</product>
+          <component>general</component>
+          <version>unspecified</version>
+          <rep_platform>All</rep_platform>
+          <op_sys>All</op_sys>
+          <bug_status>NEW</bug_status>
+          
+          
+          
+          
+          <priority>Normal</priority>
+          <bug_severity>normal</bug_severity>
+          <target_milestone>---</target_milestone>
+          
+          
+          
+          <reporter>otaylor@redhat.com</reporter>
+          <assigned_to>gnome-shell-maint@gnome.bugs</assigned_to>
+          <cc>hp@pobox.com</cc>
+          <gnome_version>Unspecified</gnome_version>
+          <gnome_target>Unspecified</gnome_target>
+          <initialowner_id>250670</initialowner_id>
+          <everconfirmed>1</everconfirmed>
+          <emblems>P</emblems>
+          <qa_contact>gnome-shell-maint@gnome.bugs</qa_contact>
+
+      
+
+          <long_desc>
+            <who>otaylor@redhat.com</who>
+            <bug_when>2008-11-21 00:22 UTC</bug_when>
+            <thetext>Call Tweener.setFrameTicker() with a custom object that bridges to
+ClutterTimeline to get new frame notifications. Combined with a
+hack to dynamically adjust the frame ticker's frame rate when
+Clutter drops frames, this means that our animations play in the
+intended time even if rendering is too slow to maintain a full
+60HZ frame rate.</thetext>
+          </long_desc>
+          <long_desc>
+            <who>otaylor@redhat.com</who>
+            <bug_when>2008-11-21 00:22 UTC</bug_when>
+            <thetext>Created an attachment (id=123143)
+Use a Tweener "Frame Ticker" with a ClutterTimeline backend
+</thetext>
+          </long_desc>
+          <long_desc>
+            <who>otaylor@redhat.com</who>
+            <bug_when>2008-11-21 00:26 UTC</bug_when>
+            <thetext>Havoc - can you take a look at this and see if it looks reasonable and 
+if the the hacks are really necessary? Is there some easier way to get
+Tweener to deal with dropped frames?
+
+</thetext>
+          </long_desc>
+          <long_desc>
+            <who>hp@pobox.com</who>
+            <bug_when>2008-11-21 01:53 UTC</bug_when>
+            <thetext>It looks to me like adding an API to drop frames, such as an arg to prepare-frame that is the current frame number or delta, might be a clean solution. Then increment the current time inside tweener using the delta.
+
+The "frame ticker" API is just something I made up, not in the original tweener. I didn't implement dropping frames yet in litl's app, so no thought has been given to that.
+
+The algorithm I am using in litl so far is:
+
+* when ticker is enabled (there are &gt;0 animations), install timeout at interval frame_length
+* inside the timeout,
+** start a GTimer frame_timer
+** emit prepare-frame which should set all tween properties and thus queue draw
+** unqueue draw and force immediate repaint
+** wait for vsync and swap buffers
+** get elapsed time from the GTimer frame_timer
+** reinstall timeout for MAX(0, frame_length - elapsed)
+* when ticker is disabled, remove the timeout
+
+So if this gets behind, it just runs "as fast as possible" (installs the timeout at 0 interval).
+
+According to a comment in the code, it was essential to force the immediate repaint instead of relying on repaint idle, because the timeout and X event queue can starve the idle otherwise if the animation gets behind.
+
+I have a "FIXME figure out how to drop frames" in the code that has never really been an issue... I think in practice for short half-second transition animations, frame dropping is maybe not very important, because if things are slow enough to drop many frames you're doomed anyway, and also in practice it can look better to just play all the frames too slowly rather than do a fast animation where objects move too much in each frame.
+
+Assuming the animation is keeping up (generally we can draw each frame in less than frame_length), I think it was pretty important to implement the timeout reinstallation for frame_length-elapsed, because just a plain glib timeout resulted in a visibly uneven frame rate. Checking just now, it looks like ClutterTimeoutPool also does this.
+</thetext>
+          </long_desc>
+          <long_desc>
+            <who>otaylor@redhat.com</who>
+            <bug_when>2008-11-23 04:15 UTC</bug_when>
+            <thetext>I've now committed a version of my patch (with a bug fix to actually
+set this._frame), but I don't think it's really the "last word"; I think
+it would make sense for Tweener to use (new Date()).getTime() to do timing
+in the normal case.
+
+Or does it make sense to have getTime() be a method on the FrameTicker?
+
+I'll leave this bug open for the moment to think about the appropriate
+patch to submit against gjs's Tweener.
+</thetext>
+          </long_desc>
+      
+          <attachment ispatch="1">
+            <attachid>123143</attachid>
+            <date>2008-11-21 00:22 UTC</date>
+            <desc>Use a Tweener "Frame Ticker" with a ClutterTimeline backend</desc>
+            <ctype>text/plain</ctype>
+          </attachment>
+    </bug>
+
+</bugzilla>
