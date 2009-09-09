@@ -20,6 +20,18 @@ body {
     color: #bb0000;
 }
 
+#enterBug {
+    padding: 0.5em;
+}
+
+#chooseAttachment {
+    padding: 0.5em;
+}
+
+.attachment-obsolete {
+    text-decoration: line-through ;
+}
+
 #controls {
     padding: 0.5em;
 }

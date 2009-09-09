@@ -347,6 +347,8 @@ function gotBug(xml) {
 
     if (theBug !== undefined && thePatch !== undefined)
         start();
+    else if (attachmentId === undefined)
+        showChooseAttachment();
 }
 
 function gotAttachment(text) {
@@ -357,51 +359,116 @@ function gotAttachment(text) {
         start();
 }
 
+function isDigits(str) {
+    return str.match(/^[0-9]+$/);
+}
+
+function newPageUrl(newBugId, newAttachmentId) {
+    var newUrl = "/index.html";
+    if (newBugId != null) {
+        newUrl += "?bug=" + escape("" + newBugId);
+        if (newAttachmentId != null)
+            newUrl += "&attachment=" + escape("" + newAttachmentId);
+    }
+
+    return newUrl;
+}
+
+function showEnterBug() {
+    $("#enterBugGo").click(function() {
+                               var newBugId = Utils.strip($("#enterBugInput").val());
+                               document.location = newPageUrl(newBugId);
+                           });
+    $("#loading").hide();
+    $("#enterBug").show();
+}
+
+function showChooseAttachment() {
+    for (var i = 0; i < theBug.attachments.length; i++) {
+        var attachment = theBug.attachments[i];
+
+        if (!attachment.isPatch)
+            continue;
+
+        var href = newPageUrl(theBug.id, attachment.id);
+
+        var date = Utils.formatDate(attachment.date);
+        var status = (attachment.status && attachment.status != 'none') ? attachment.status : '';
+
+        var obsoleteClass = attachment.isObsolete ? "attachment-obsolete" : '';
+
+        $("<tr>"
+          + "<td class='attachment-id'><a></a></td>"
+          + "<td class='attachment-desc'><a></a></td>"
+          + "<td class='attachment-date'></td>"
+          + "<td class='attachment-status'></td>"
+          + "</tr>")
+            .find(".attachment-id a")
+                .attr("href", href)
+                .text(attachment.id).end()
+            .find(".attachment-desc a")
+                .addClass(obsoleteClass)
+                .attr("href", href)
+                .text(attachment.description).end()
+            .find(".attachment-date").text(date).end()
+            .find(".attachment-status").text(status).end()
+            .appendTo("#chooseAttachment tbody");
+    }
+
+    $("#loading").hide();
+    $("#chooseAttachment").show();
+}
+
 function init() {
     var params = getQueryParams();
-    var bug_id;
+    var bugId;
 
-   if (params.bug) {
-        bug_id = parseInt(params.bug);
-    }
-    if (bug_id === undefined || isNaN(bug_id)) {
-        alert("Must specify a valid bug ID");
+    if (params.bug)
+        bugId = isDigits(params.bug) ? parseInt(params.bug) : NaN;
+
+    if (bugId === undefined || isNaN(bugId)) {
+        if (bugId !== undefined)
+            displayError("Bug ID '" + params.bug + "' is not valid");
+        showEnterBug();
         return;
+    } else {
+        $.ajax({
+                   type: 'GET',
+                   dataType: 'xml',
+                   url: '/show_bug.cgi',
+                   data: {
+                       id: bugId,
+                       ctype: 'xml',
+                       excludefield: 'attachmentdata'
+                   },
+                   success: gotBug,
+                   error: function() {
+                       displayError("Failed to retrieve bug " + bugId);
+                       showEnterBug();
+                   }
+               });
     }
 
-   if (params.attachment) {
-        attachmentId = parseInt(params.attachment);
+    if (params.attachment) {
+        attachmentId = isDigits(params.attachment) ? parseInt(params.attachment) : NaN;
     }
     if (attachmentId === undefined || isNaN(attachmentId)) {
-        alert("Must specify a valid attachment ID");
-        return;
+        if (attachmentId !== undefined) {
+            displayError("Attachment ID '" + params.bug + "' is not valid");
+            attachmentId = undefined;
+        }
+    } else {
+        $.ajax({
+                   type: 'GET',
+                   dataType: 'text',
+                   url: '/attachment.cgi',
+                   data: {
+                       id: attachmentId
+                   },
+                   success: gotAttachment,
+                   error: function(a, b, c) {
+                       displayError("Failed to retrieve attachment " + attachmentId);
+                   }
+               });
     }
-
-    $.ajax({
-               type: 'GET',
-               dataType: 'xml',
-               url: '/show_bug.cgi',
-               data: {
-                   id: bug_id,
-                   ctype: 'xml',
-                   excludefield: 'attachmentdata'
-               },
-               success: gotBug,
-               error: function() {
-                   displayError("Failed to retrieve bug");
-               },
-    });
-
-    $.ajax({
-               type: 'GET',
-               dataType: 'text',
-               url: '/attachment.cgi',
-               data: {
-                   id: attachmentId
-               },
-               success: gotAttachment,
-               error: function(a, b, c) {
-                   displayError("Failed to retrieve attachment");
-               }
-           });
 }
