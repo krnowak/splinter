@@ -231,9 +231,9 @@ function addPatchFile(file) {
                          if ((flags & Patch.CHANGED) != 0)
                              oldStyle = newStyle = "changed-line";
                          else if ((flags & Patch.REMOVED) != 0)
-                         oldStyle = "removed-line";
-                         else if ((flags & Patch.ADDED_LINE) != 0)
-                         newStyle = "added-line";
+                             oldStyle = "removed-line";
+                         else if ((flags & Patch.ADDED) != 0)
+                             newStyle = "added-line";
 
                          if (oldText != null) {
                              tr.appendChild(EL("td", "old-line " + oldStyle,
