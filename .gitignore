@@ -1,5 +1,7 @@
 jstest
 *.o
+*.pyc
+*~
+proxy/config.py
 web/config.js
 web/splinter.flat.js
-*~

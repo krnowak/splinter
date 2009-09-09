@@ -1,0 +1,37 @@
+splinter_proxy.py
+=================
+This is a simple HTTP server written in Python to support hacking on
+Splinter. Because of cross-site scripting restrictions, the splinter
+code must live on the same HTTP server as the Bugzilla URLs it
+accesses to get bug data. In production, Splinter is simply installed
+on the Bugzilla server, but setting up a test instance of Bugzilla
+is frequently not convenient: it requires a huge set of Perl modules,
+a MySQL server and a fair bit of configuration.
+
+So, splinter_proxy.py presents a virtual server that combines the
+Splinter content with proxied redirection of the necessary Bugzilla
+URL's to an existing instance of bugzilla.
+
+Authentication to the Bugzilla server is done by splinter_proxy.py
+based on putting a fixed Bugzilla login and password into its
+configuration. This means that ANYBODY WHO CAN CONNECT TO THE PROXY
+CAN DO ANYTHING AS THE CONFIGURED user.
+
+splinter_proxy.py by default only binds to the "local" interface
+127.0.0.1 and it will ignore the configured login/password if it is
+configured to bind to a different interface. (The ability to bind to a
+different interface and run anonymously is intended for creating a
+public read-only demo of Splinter; it's not particularly useful for
+development.)
+
+So, as long as you run it on a personal system that only you have
+login access to you should be OK.
+
+Usage
+=====
+* Copy config.py.example to config.py
+* Edit the bugzilla_url, bugzilla_login, and bugzilla_password
+  fields appropriately.
+* Run
+  ./splinter_proxy.py
+* Connect to http://127.0.0.1:23080/ in your web browser
