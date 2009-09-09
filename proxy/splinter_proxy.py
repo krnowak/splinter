@@ -99,6 +99,13 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             connection.send(self.rfile.read(content_length))
 
         response = connection.getresponse()
+
+        if not self.maybe_redirect(response, [proxy_url]):
+            self.relay_response(response)
+
+        connection.close()
+
+    def maybe_redirect(self, response, seen_urls):
         # Redirect status codes are a bit confusing; 302 (Found) by
         # tradition is handled like 303 (See Other) - a new request is
         # made with a method of GET without regard to the original
@@ -116,15 +123,17 @@ class ProxyHandler(SimpleHTTPRequestHandler):
         if response.status in (302, 303):
             location = response.getheader('location')
             if location:
-                self.do_redirect(location)
-                return
+                if location in seen_urls or len(seen_urls) >= 10:
+                    self.send_error(400, 'Circular redirection, or too many redirects')
+                else:
+                    seen_urls.append(location)
+                    self.do_redirect(location, seen_urls)
+                return True
 
-        self.relay_response(response)
-
-        connection.close()
+        return False
 
     # Retry the request with a GET after a redirect
-    def do_redirect(self, location):
+    def do_redirect(self, location, seen_urls):
         self.log_message("Redirecting to %s", location)
         split = urlparse.urlsplit(location)
         if (split.scheme == 'http'):
@@ -148,14 +157,15 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             # We additionally exclude content-length since it would
             # be referring to the data sent with an original POST and
             # we're not sending that data with the redirected GET
-            if not header.lower() ('cookie', 'host', 'content-length'):
+            if not header.lower() in ('cookie', 'host', 'content-length'):
                 connection.putheader(header, value)
         if login_cookie_header is not None:
             connection.putheader('Cookie', login_cookie_header)
         connection.endheaders()
 
         response = connection.getresponse()
-        self.relay_response(response)
+        if not self.maybe_redirect(response, seen_urls):
+            self.relay_response(response)
 
         connection.close()
 
