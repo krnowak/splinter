@@ -13,6 +13,13 @@ body {
     padding: 0.5em;
 }
 
+#error {
+    border: 1px solid black;
+    margin: 0.5em;
+    padding: 0.5em;
+    color: #bb0000;
+}
+
 #controls {
     padding: 0.5em;
 }

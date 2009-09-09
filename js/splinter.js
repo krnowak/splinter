@@ -12,6 +12,14 @@ var theReview;
 const ADD_COMMENT_SUCCESS = /<title>\s*Bug[\S\s]*processed\s*<\/title>/;
 const UPDATE_ATTACHMENT_SUCCESS = /<title>\s*Changes\s+Submitted/;
 
+function displayError(msg) {
+    $("<p></p>")
+        .text(msg)
+        .appendTo("#error");
+    $("#error").show();
+    $("#loading").hide();
+}
+
 function updateAttachmentStatus(attachment, newStatus, success, failure) {
     var data = {
         action: 'update',
@@ -86,23 +94,19 @@ function saveReview() {
         alert("Succesfully published the review.");
     }
 
-    function error(message) {
-        alert(message);
-    }
-
     addComment(theBug, comment,
                function(detail) {
                    if (newStatus)
                        updateAttachmentStatus(theAttachment, newStatus,
                                               success,
                                               function() {
-                                                  error("Published review; patch status could not be updated.");
+                                                  displayError("Published review; patch status could not be updated.");
                                               });
                    else
                        success();
                },
                function(detail) {
-                   error("Failed to publish review.");
+                   displayError("Failed to publish review.");
                });
 }
 
@@ -373,16 +377,31 @@ function init() {
         return;
     }
 
-    $.get("/show_bug.cgi",
-          {
-              id: bug_id,
-              ctype: 'xml',
-              excludefield: 'attachmentdata'
-           },
-          gotBug, "xml");
-    $.get("/attachment.cgi",
-          {
-              id: attachmentId
-           },
-          gotAttachment, "text");
+    $.ajax({
+               type: 'GET',
+               dataType: 'xml',
+               url: '/show_bug.cgi',
+               data: {
+                   id: bug_id,
+                   ctype: 'xml',
+                   excludefield: 'attachmentdata'
+               },
+               success: gotBug,
+               error: function() {
+                   displayError("Failed to retrieve bug");
+               },
+    });
+
+    $.ajax({
+               type: 'GET',
+               dataType: 'text',
+               url: '/attachment.cgi',
+               data: {
+                   id: attachmentId
+               },
+               success: gotAttachment,
+               error: function(a, b, c) {
+                   displayError("Failed to retrieve attachment");
+               }
+           });
 }
