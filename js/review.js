@@ -223,8 +223,26 @@ Review.prototype = {
 
                 var hunk = new Patch.Hunk(oldStart, oldCount, newStart, newCount, m2[5], true);
 
-                var location = file.patchFile.getLocation(hunk.oldStart + hunk.oldCount - 1,
-                                                          hunk.newStart + hunk.newCount - 1);
+                // Numbering of old/new line numbers is
+                //
+                //     A             B
+                // 1 1 2 3 3 4 5 5 5 6 7
+                //   * *   * *     * * *
+                //
+                // Where the * represent lines actually in that version of the file.
+                // So, the difference in line numbers between A and B is the number of
+                // *'s from A to B, not including B.
+
+                var oldLine = hunk.oldStart + hunk.oldCount;
+                var newLine = hunk.newStart + hunk.newCount;
+
+                var lastLine = hunk.lines[hunk.lines.length - 1];
+                if (lastLine[0] != null)
+                    oldLine--;
+                if (lastLine[1] != null)
+                    newLine--;
+
+                var location = file.patchFile.getLocation(oldLine, newLine);
                 file.addComment(location, Utils.strip(hunk.comment));
             }
 

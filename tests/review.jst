@@ -52,7 +52,7 @@ I like this patch
 >>>, r.toString());
 
 let argC = r.getFile('gi/arg.c');
-let loc = argC.patchFile.getLocation(216,214);
+let loc = argC.patchFile.getLocation(216,215);
 r.getFile('gi/arg.c').addComment(loc, 'Should you have removed elem?');
 assertEquals(<<<
 I like this patch
@@ -122,7 +122,7 @@ let r2 = new Review.Review(p);
 r2.parse(r.toString());
 assertEquals(r.toString(), r2.toString());
 
-loc = argC.patchFile.getLocation(216,214);
+loc = argC.patchFile.getLocation(216,215);
 let comment = argC.getComment(loc);
 assertEquals(loc, comment.location);
 comment.remove();

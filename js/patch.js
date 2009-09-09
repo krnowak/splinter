@@ -158,15 +158,15 @@ Hunk.prototype = {
     },
 
     iterate : function(cb) {
-        var oldLine = this.oldStart - 1;
-        var newLine = this.newStart - 1;
+        var oldLine = this.oldStart;
+        var newLine = this.newStart;
         for (var i = 0; i < this.lines.length; i++) {
             var line = this.lines[i];
+            cb(this.location + i, oldLine, line[0], newLine, line[1], line[2], line);
             if (line[0] != null)
                 oldLine++;
             if (line[1] != null)
                 newLine++;
-            cb(this.location + i, oldLine, line[0], newLine, line[1], line[2], line);
         }
     }
 };
