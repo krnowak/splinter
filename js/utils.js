@@ -6,9 +6,7 @@ function assert(condition) {
 }
 
 function assertNotReached() {
-    if (expected != value) {
-        throw new Error("Assertion failed: should not be reached");
-    }
+    throw new Error("Assertion failed: should not be reached");
 }
 
 function strip(string) {
