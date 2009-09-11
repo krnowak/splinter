@@ -63,14 +63,14 @@ class Flattener(object):
                 module_name = m.group(1)
                 if not module_name in self.flattened_modules:
                     self.flattened_modules.add(module_name)
-                    print "var %s = {}" % module_name
+                    print "var %s = {};" % module_name
                     self.flatten(os.path.join("js", module_name.lower() + ".js"), module_name)
             elif m.group(2) is not None:
                 if namespace is None:
                     print "function %s%s" % (m.group(2), m.group(3))
                 else:
                     add_local(m.group(2))
-                    print "%s.%s = function%s" % (namespace, m.group(2), substitute_locals(m.group(3)))
+                    print "%s.%s = function%s;" % (namespace, m.group(2), substitute_locals(m.group(3)))
             elif m.group(4) is not None:
                 if namespace is None:
                     print "%s.%s = %s" % (m.group(4), m.group(5), m.group(6))
