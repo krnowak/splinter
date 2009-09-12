@@ -2,12 +2,18 @@
 include('Bug');
 include('Patch');
 include('Review');
+include('ReviewStorage');
 
+var reviewStorage;
 var attachmentId;
 var theBug;
 var theAttachment;
 var thePatch;
 var theReview;
+
+var saveDraftTimeoutId;
+var saveDraftNoticeTimeoutId;
+var savingDraft = false;
 
 const ADD_COMMENT_SUCCESS = /<title>\s*Bug[\S\s]*processed\s*<\/title>/;
 const UPDATE_ATTACHMENT_SUCCESS = /<title>\s*Changes\s+Submitted/;
@@ -80,7 +86,7 @@ function addComment(bug, comment, success, failure) {
            });
 }
 
-function saveReview() {
+function publishReview() {
     theReview.setIntro($("#myComment").val());
 
     var comment = "Review of attachment " + attachmentId + ":\n\n" + theReview;
@@ -92,6 +98,8 @@ function saveReview() {
 
     function success() {
         alert("Succesfully published the review.");
+        if (reviewStorage)
+            reviewStorage.draftPublished(theBug, theAttachment);
     }
 
     addComment(theBug, comment,
@@ -108,6 +116,39 @@ function saveReview() {
                function(detail) {
                    displayError("Failed to publish review.");
                });
+}
+
+function hideSaveDraftNotice() {
+    saveDraftNoticeTimeoutId = null;
+    $("#saveDraftNotice").hide();
+}
+
+function saveDraft() {
+    theReview.setIntro($("#myComment").val());
+
+    if (reviewStorage == null)
+        return;
+
+    clearTimeout(saveDraftTimeoutId);
+    saveDraftTimeoutId = null;
+
+    savingDraft = true;
+    $("#saveDraftNotice")
+        .text("Saving Draft...")
+        .show();
+    clearTimeout(saveDraftNoticeTimeoutId);
+    setTimeout(hideSaveDraftNotice, 3000);
+
+    reviewStorage.saveDraft(theBug, theAttachment, theReview);
+
+    savingDraft = false;
+    $("#saveDraftNotice")
+        .text("Saved Draft");
+}
+
+function queueSaveDraft() {
+    if (saveDraftTimeoutId == null)
+        saveDraftTimeoutId = setTimeout(saveDraft, 10000);
 }
 
 function getQueryParams() {
@@ -162,8 +203,14 @@ function getSeparatorClass(type) {
     return null;
 }
 
-function addCommentDisplay(row, comment, commentorIndex) {
+function addCommentDisplay(row, comment) {
     var commentArea = ensureCommentArea(row);
+
+    var commentorIndex;
+    if (comment.file.review == theReview)
+        commentorIndex = 0;
+    else
+        commentorIndex = 1;
 
     var separatorClass = getSeparatorClass(comment.type);
     if (separatorClass)
@@ -198,7 +245,7 @@ function saveComment(row, file, location, type) {
         else
             comment = reviewFile.addComment(location, type, value);
 
-        addCommentDisplay(row, comment, 0);
+        addCommentDisplay(row, comment);
     } else {
         if (comment)
             comment.remove();
@@ -209,6 +256,8 @@ function saveComment(row, file, location, type) {
     } else {
         $(commentArea).find(".comment-editor").remove();
     }
+
+    saveDraft();
 }
 
 function insertCommentEditor(clickRow, clickType) {
@@ -334,7 +383,7 @@ function addPatchFile(file) {
 
                          if (line.reviewComments != null)
                              for (var k = 0; k < line.reviewComments.length; k++)
-                                 addCommentDisplay(tr, line.reviewComments[k], 1);
+                                 addCommentDisplay(tr, line.reviewComments[k]);
                      });
     }
 }
@@ -342,7 +391,10 @@ function addPatchFile(file) {
 var REVIEW_RE = /^\s*review\s+of\s+attachment\s+(\d+)\s*:\s*/i;
 
 function start(xml) {
-    theReview = new Review.Review(thePatch);
+    if (reviewStorage)
+        theReview = reviewStorage.loadDraft(theBug, theAttachment, thePatch);
+    if (!theReview)
+        theReview = new Review.Review(thePatch);
 
     $("#loading").hide();
     $("#headers").show();
@@ -366,6 +418,10 @@ function start(xml) {
         $("#patchIntro").text(thePatch.intro);
     else
         $("#patchIntro").hide();
+
+    $("#myComment")
+        .val(theReview.intro)
+        .keypress(queueSaveDraft);
 
     $("#attachmentId").text(theAttachment.id);
     $("#attachmentDesc").text(theAttachment.description);
@@ -400,7 +456,7 @@ function start(xml) {
     for (i = 0; i < thePatch.files.length; i++)
         addPatchFile(thePatch.files[i]);
 
-    $("#saveButton").click(publishReview);
+    $("#publishButton").click(publishReview);
 }
 
 function gotBug(xml) {
@@ -491,6 +547,9 @@ function showChooseAttachment() {
 function init() {
     var params = getQueryParams();
     var bugId;
+
+    if (ReviewStorage.LocalReviewStorage.available())
+        reviewStorage = new ReviewStorage.LocalReviewStorage();
 
     if (params.bug)
         bugId = isDigits(params.bug) ? parseInt(params.bug) : NaN;

@@ -166,3 +166,12 @@ body {
 .comment-separator-added {
     clear: right;
 }
+
+#saveDraftNotice {
+    border: 1px solid black;
+    padding: 0.5em;
+    background: #ffccaa;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+}

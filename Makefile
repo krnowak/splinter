@@ -11,6 +11,7 @@ JS_FILES =					\
 	js/bug.js				\
 	js/patch.js				\
 	js/review.js				\
+	js/reviewStorage.js			\
 	js/splinter.js				\
 	js/testUtils.js				\
 	js/utils.js
