@@ -8,6 +8,7 @@ import os
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import socket
 from SocketServer import ForkingMixIn
+import time
 import urlparse
 import re
 import sys
@@ -33,6 +34,12 @@ def is_proxied(path):
 
 # Cookie values we'll send to Bugzilla if logged in
 login_cookie_header = None
+
+# Time we started the proxy server
+start_time = time.time()
+
+# Content for config.js
+config_js_content = None
 
 # Convert an URL we received from a client to all the information we'll
 # need to proxy to the Bugzilla server - host, port, new path, etc.
@@ -169,6 +176,18 @@ class ProxyHandler(SimpleHTTPRequestHandler):
 
         connection.close()
 
+    def do_config_js(self):
+        self.send_response(200, "OK")
+        self.send_header("Content-type", "text/javascript")
+        self.send_header("Content-Length", str(len(config_js_content)))
+        self.send_header("Last-Modified", self.date_time_string(start_time))
+        self.end_headers()
+
+        if (self.command == 'GET'):
+            self.wfile.write(config_js_content)
+
+        self.wfile.close()
+
     # Overrides
 
     def version_string(self):
@@ -177,16 +196,18 @@ class ProxyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if is_proxied(self.path):
             self.do_proxied()
-            return
-
-        SimpleHTTPRequestHandler.do_GET(self)
+        elif self.path == "/config.js":
+            self.do_config_js()
+        else:
+            SimpleHTTPRequestHandler.do_GET(self)
 
     def do_HEAD(self):
         if is_proxied(self.path):
             self.do_proxied()
-            return
-
-        SimpleHTTPRequestHandler.do_HEAD(self)
+        elif self.path == "/config.js":
+            self.do_config_js()
+        else:
+            SimpleHTTPRequestHandler.do_HEAD(self)
 
     def do_POST(self):
         if is_proxied(self.path):
@@ -284,6 +305,25 @@ def login():
         print >>sys.stderr, "Can't log in to %s: %s" % (current_config['bugzilla_url'],
                                                         e.args[1])
 
+def read_config_js():
+    try:
+        f = open("../web/config.js")
+    except IOError:
+        print >>sys.stderr, "web/config.js doesn't exist; you need to create it from config.js.example"
+        sys.exit(1)
+
+    content = f.read()
+    f.close()
+
+    content = content.replace('@@BUGZILLA_URL@@',  current_config['bugzilla_url'])
+    if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
+        note = ''
+    else:
+        note = 'This is a read-only demo instance of Splinter; you will not be able to publish your reviews'
+    content = content.replace('@@NOTE@@',  note)
+
+    return content
+
 ########################################
 
 # SimpleHTTPRequestHandler serves files relative to the current working directory
@@ -305,6 +345,8 @@ if not config_name in config.configs:
     sys.exit(1)
 
 current_config = config.configs[config_name]
+
+config_js_content = read_config_js()
 
 if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
     if 'proxy_bind' in current_config and current_config['proxy_bind'] != '127.0.0.1':

@@ -1,5 +1,13 @@
+# @@<name>@@ substituations are done by splinter_proxy.py; they should be be
+# replaced with the actual values for a production install.
+
 # Base URL for links to Bugzilla
-configBugzillaUrl = 'http://bugzilla.gnome.org';
+#configBugzillaUrl = 'http://bugzilla.gnome.org';
+configBugzillaUrl = '@@BUGZILLA_URL@@';
+
+# Note displayed at the top of every page
+#configNote = ''
+configNote = '@@NOTE@@'
 
 # These are the attachment statuses for bugzilla.gnome.org, which is
 # the only Bugzilla instance I'm aware that supports attachment statuses

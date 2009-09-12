@@ -29,6 +29,8 @@ login access to you should be OK.
 
 Usage
 =====
+* Copy config.js.example in the $(topdir)/web to config.js; you
+  probably won't need to edit it.
 * Copy config.py.example to config.py
 * Replace 'bugzilla.example.com' with your server, and edit
   bugzilla_login, and bugzilla_password appropriately.

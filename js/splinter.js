@@ -462,6 +462,7 @@ function gotBug(xml) {
     theBug = Bug.Bug.fromDOM(xml);
 
     $("#headers").show();
+    showNote();
 
     $("#bugId").text(theBug.id);
     $("#bugShortDesc").text(theBug.shortDesc);
@@ -505,7 +506,16 @@ function newPageUrl(newBugId, newAttachmentId) {
     return newUrl;
 }
 
+function showNote() {
+    if (configNote)
+        $("#note")
+            .text(configNote)
+            .show();
+}
+
 function showEnterBug() {
+    showNote();
+
     $("#enterBugGo").click(function() {
                                var newBugId = Utils.strip($("#enterBugInput").val());
                                document.location = newPageUrl(newBugId);
