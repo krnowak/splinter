@@ -30,8 +30,8 @@ login access to you should be OK.
 Usage
 =====
 * Copy config.py.example to config.py
-* Edit the bugzilla_url, bugzilla_login, and bugzilla_password
-  fields appropriately.
+* Replace 'bugzilla.example.com' with your server, and edit
+  bugzilla_login, and bugzilla_password appropriately.
 * Run
   ./splinter_proxy.py
-* Connect to http://127.0.0.1:23080/ in your web browser
+* Connect to http://127.0.0.1:23080/index.html in your web browser

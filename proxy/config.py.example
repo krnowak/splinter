@@ -1,15 +1,24 @@
-bugzilla_url = 'http://bugzilla.example.com'
+# This can be overridden on the command line
+default_config = 'bugzilla.example.com'
 
-# If these are commented out, the proxy will run anonymously;
-# You'll be able to view reviews and edit new reviews but
-# not save them.
-bugzilla_login = 'john.doe@example.com'
-bugzilla_password = '<password>'
+configs = {
+    'bugzilla.example.com': {
+        'bugzilla_url': 'http://bugzilla.example.com',
+	# If these are commented out, the proxy will run anonymously;
+	# You'll be able to view reviews and edit new reviews but
+	# not save them.
+        'bugzilla_login': 'john.doe@example.com',
+        'bugzilla_password': '<password>',
 
-# If is anything other than 127.0.0.1, the proxy will run
-# only in anonymous mode; this is a safety precaution since
-# anybody connecting to the proxy can do ABSOLUTELY ANYTHING
-# with your bugzilla account.
-#server_bind = '127.0.0.1'
-#server_port = 23080
+	# If you have multiple configs you switch between, using
+	# different ports is useful so that they'll have different
+	# localStorage origins
+        #'proxy_port' = 23080,
 
+	# If is anything other than 127.0.0.1, the proxy will run
+	# only in anonymous mode; this is a safety precaution since
+	# anybody connecting to the proxy can do ABSOLUTELY ANYTHING
+	# with your bugzilla account.
+        #'proxy_bind' = '127.0.0.1',
+    }
+}

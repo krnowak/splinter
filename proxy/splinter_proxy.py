@@ -37,7 +37,7 @@ login_cookie_header = None
 # Convert an URL we received from a client to all the information we'll
 # need to proxy to the Bugzilla server - host, port, new path, etc.
 def get_proxy_info(path):
-    split = urlparse.urlsplit(config.bugzilla_url)
+    split = urlparse.urlsplit(current_config['bugzilla_url'])
     port = split.port
     portstr = ":" + str(port) if port else ""
     if split.scheme =='http':
@@ -269,19 +269,19 @@ def login():
         # 'remember: 0' basically just causes the server not to send an
         # Expires: parameter with the cookie, but it serves as a hint
         # to our intent if Bugzilla's login cookie handling chanes
-        xmlrpc.User.login({ 'login': config.bugzilla_login,
-                            'password': config.bugzilla_password,
+        xmlrpc.User.login({ 'login': current_config['bugzilla_login'],
+                            'password': current_config['bugzilla_password'],
                             'remember': 0 })
-        print >>sys.stderr, "Successfully logged into %s" % config.bugzilla_url
+        print >>sys.stderr, "Successfully logged into %s" % current_config['bugzilla_url']
     except xmlrpclib.Fault, e:
-        print >>sys.stderr, "Can't log in to %s: %s" % (config.bugzilla_url,
+        print >>sys.stderr, "Can't log in to %s: %s" % (current_config['bugzilla_url'],
                                                         e.faultString)
     except xmlrpclib.ProtocolError, e:
-        print >>sys.stderr, "Can't log in to %s: %d %s" % (config.bugzilla_url,
+        print >>sys.stderr, "Can't log in to %s: %d %s" % (current_config['bugzilla_url'],
                                                            e.errcode,
                                                            e.errmsg)
     except (socket.error, socket.herror, socket.gaierror), e:
-        print >>sys.stderr, "Can't log in to %s: %s" % (config.bugzilla_url,
+        print >>sys.stderr, "Can't log in to %s: %s" % (current_config['bugzilla_url'],
                                                         e.args[1])
 
 ########################################
@@ -292,24 +292,40 @@ script_path = os.path.realpath(os.path.abspath(sys.argv[0]))
 top_dir = os.path.dirname(os.path.dirname(script_path))
 os.chdir(os.path.join(top_dir, "web"))
 
-if hasattr(config, 'bugzilla_login') and hasattr(config, 'bugzilla_password'):
-    if hasattr(config, 'server_bind') and config.server_bind != '127.0.0.1':
+if len(sys.argv) == 1:
+    config_name = config.default_config
+elif len(sys.argv) == 2:
+    config_name = sys.argv[1]
+else:
+    print >>sys.stderr, "Usage: splinter_proxy.py [<config_name>]"
+    sys.exit(1)
+
+if not config_name in config.configs:
+    print >>sys.stderr, "Usage: Configuration name '%s' is not defined in config.py" % config_name
+    sys.exit(1)
+
+current_config = config.configs[config_name]
+
+if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
+    if 'proxy_bind' in current_config and current_config['proxy_bind'] != '127.0.0.1':
         # anybody connecting to the proxy can do ABSOLUTELY ANYTHING
         # with your bugzilla account.
-        print >>sys.stderr, "server_bind is '%s' not '127.0.0.1" % config.server_bind
+        print >>sys.stderr, "proxy_bind is '%s' not '127.0.0.1" % current_config['proxy_bind']
         print >>sys.stderr, "Refusing to log in with private login/password"
     else:
         login()
 
 if login_cookie_header is None:
-    print >>sys.stderr, "Proxying to %s anonymously" % (config.bugzilla_url)
+    print >>sys.stderr, "Proxying to %s anonymously" % (current_config['bugzilla_url'])
 
-server_bind = '127.0.0.1'
-server_port = 23080
-if hasattr(config, 'server_bind'):
-    server_bind = config.server_bind
-if hasattr(config, 'server_port'):
-    server_port = config.server_port
+proxy_bind = '127.0.0.1'
+proxy_port = 23080
+if 'proxy_bind' in current_config:
+    proxy_bind = current_config['proxy_bind']
+if 'proxy_port' in current_config:
+    proxy_port = current_config['proxy_port']
 
-httpd = HTTPServer((server_bind, server_port), ProxyHandler)
+print >>sys.stderr, "Running as http://%s:%d/index.html" % (proxy_bind, proxy_port)
+
+httpd = HTTPServer((proxy_bind, proxy_port), ProxyHandler)
 httpd.serve_forever()
