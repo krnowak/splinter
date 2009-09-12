@@ -79,7 +79,8 @@ load_module(JSContext *cx, const char *module_name, JSObject **module_out)
     JSObject *module;
     jsval dummy;
 
-    lower_name = g_ascii_strdown (module_name, -1);
+    lower_name = g_strdup(module_name);
+    lower_name[0] = g_ascii_tolower(lower_name[0]);
     file_name = g_strconcat(lower_name, ".js", NULL);
     file_path = g_build_filename("js", file_name, NULL);
 

@@ -12,13 +12,15 @@ JS_FILES =					\
 	js/patch.js				\
 	js/review.js				\
 	js/splinter.js				\
+	js/testUtils.js				\
 	js/utils.js
+
 
 TESTS =						\
 	tests/bug.jst				\
 	tests/patch.jst				\
 	tests/review.jst			\
-	tests/testutils.jst			\
+	tests/testUtils.jst			\
 	tests/utils.jst
 
 CLEAN_FILES =					\

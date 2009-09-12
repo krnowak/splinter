@@ -24,6 +24,10 @@ NONBLANK_RE = re.compile("\S")
 
 NAME_RE = re.compile("(?<![\w\.])\w+(?!\w)")
 
+def moduleToFilename(module_name):
+    base_name = module_name[0].lower() + module_name[1:] + ".js"
+    return os.path.join("js", base_name)
+
 class Flattener(object):
     def __init__(self, outf):
         self.outf = outf
@@ -64,7 +68,7 @@ class Flattener(object):
                 if not module_name in self.flattened_modules:
                     self.flattened_modules.add(module_name)
                     print "var %s = {};" % module_name
-                    self.flatten(os.path.join("js", module_name.lower() + ".js"), module_name)
+                    self.flatten(moduleToFilename(module_name), module_name)
             elif m.group(2) is not None:
                 if namespace is None:
                     print "function %s%s" % (m.group(2), m.group(3))
