@@ -225,6 +225,24 @@ File.prototype = {
     }
 };
 
+function _cleanIntro(intro) {
+    var m;
+
+    intro = Utils.strip(intro);
+
+    // Git: remove leading 'From <commit_id> <date'
+    m = /^From\s+[a-f0-9]{40}.*\n/.exec(intro);
+    if (m)
+        intro = intro.substr(m.index + m[0].length);
+
+    // Git: remove 'diff --stat' output from the end
+    m = /^---\n(?:^\s.*\n)+\s+\d+\s+files changed.*\n?(?!.)/m.exec(intro);
+    if (m)
+        intro = intro.substr(0, m.index);
+
+    return intro;
+}
+
 // Matches the start unified diffs for a file as produced by different version control tools
 const FILE_START_RE = /^(?:(?:Index|index|===|RCS|diff).*\n)*---[ \t]*(\S+).*\n\+\+\+[ \t]*(\S+).*\n(?=@@)/mg;
 
@@ -246,6 +264,10 @@ Patch.prototype = {
         this.files = [];
 
         var m = FILE_START_RE.exec(text);
+        if (m != null)
+            this.intro = _cleanIntro(text.substring(0, m.index));
+        else
+            throw "Not a patch";
 
         while (m != null) {
             // git and hg show a diff between a/foo/bar.c and b/foo/bar.c

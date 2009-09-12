@@ -297,6 +297,11 @@ function start(xml) {
     $("#bugReporter").text(theBug.getReporter());
     $("#bugCreationDate").text(Utils.formatDate(theBug.creationDate));
 
+    if (thePatch.intro)
+        $("#patchIntro").text(thePatch.intro);
+    else
+        $("#patchIntro").hide();
+
     for (i = 0; i < theBug.attachments.length; i++) {
         var attachment = theBug.attachments[i];
         if (attachment.id == attachmentId) {

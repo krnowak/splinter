@@ -142,3 +142,35 @@ assertEquals(<<<
 file = patch.getFile('src/zeitgeist_gui/zeitgeist_panel_widgets.py');
 assertEquals(file.getLocation(515, 515), 11);
 
+patch = new Patch.Patch(<<<
+From f96fb5c7ee6e14725bba8518c1da59ce4e410724 Mon Sep 17 00:00:00 2001
+From: Owen W. Taylor <otaylor@fishsoup.net>
+Date: Fri, 11 Sep 2009 16:57:19 -0400
+Subject: [PATCH] Fix missing semicolons in flattener.py output
+
+Add semicolons after generated 'a = b' assignments.
+---
+ flattener.py |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/flattener.py b/flattener.py
+index eee73b8..038ae2e 100755
+--- a/flattener.py
++++ b/flattener.py
+@@ -63,4 +63,4 @@ class Flattener(object):
+                 module_name = m.group(1)
+                 if not module_name in self.flattened_modules:
+                     self.flattened_modules.add(module_name)
+-                    print "var %s = {}" % module_name
++                    print "var %s = {};" % module_name
+-- 
+1.6.2.5
+>>>);
+
+assertEquals(<<<
+From: Owen W. Taylor <otaylor@fishsoup.net>
+Date: Fri, 11 Sep 2009 16:57:19 -0400
+Subject: [PATCH] Fix missing semicolons in flattener.py output
+
+Add semicolons after generated 'a = b' assignments.
+>>>, patch.intro);

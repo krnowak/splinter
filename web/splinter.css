@@ -36,6 +36,14 @@ body {
     padding: 0.5em;
 }
 
+#patchIntro {
+    border: 1px solid #888888;
+    font-size: 90%;
+    margin-bottom: 1em;
+    white-space: pre;
+    padding: 0.5em;
+}
+
 .review {
     border: 1px solid black;
     font-size: 90%;
