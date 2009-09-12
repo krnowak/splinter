@@ -342,6 +342,8 @@ function addPatchFile(file) {
 var REVIEW_RE = /^\s*review\s+of\s+attachment\s+(\d+)\s*:\s*/i;
 
 function start(xml) {
+    theReview = new Review.Review(thePatch);
+
     $("#loading").hide();
     $("#headers").show();
     $("#controls").show();
@@ -365,22 +367,13 @@ function start(xml) {
     else
         $("#patchIntro").hide();
 
-    for (i = 0; i < theBug.attachments.length; i++) {
-        var attachment = theBug.attachments[i];
-        if (attachment.id == attachmentId) {
-            theAttachment = attachment;
-
-            $("#attachmentId").text(attachment.id);
-            $("#attachmentDesc").text(attachment.description);
-            $("#attachmentDate").text(Utils.formatDate(attachment.date));
-            if (attachment.status != null)
-                $("#attachmentStatus").val(attachment.status);
-            else
-                $("#attachmentStatusSpan").hide();
-
-            break;
-        }
-    }
+    $("#attachmentId").text(theAttachment.id);
+    $("#attachmentDesc").text(theAttachment.description);
+    $("#attachmentDate").text(Utils.formatDate(theAttachment.date));
+    if (theAttachment.status != null)
+        $("#attachmentStatus").val(theAttachment.status);
+    else
+        $("#attachmentStatusSpan").hide();
 
     for (i = 0; i < theBug.comments.length; i++) {
         var comment = theBug.comments[i];
@@ -407,23 +400,31 @@ function start(xml) {
     for (i = 0; i < thePatch.files.length; i++)
         addPatchFile(thePatch.files[i]);
 
-    $("#saveButton").click(saveReview);
+    $("#saveButton").click(publishReview);
 }
 
 function gotBug(xml) {
     theBug = Bug.Bug.fromDOM(xml);
 
-    if (theBug !== undefined && thePatch !== undefined)
-        start();
-    else if (attachmentId === undefined)
+    if (attachmentId != null) {
+        theAttachment = theBug.getAttachment(attachmentId);
+        if (theAttachment == null)
+            displayError("Attachment " + attachmentId + " is not an attachment to bug " + theBug.id);
+        else if (!theAttachment.isPatch) {
+            displayError("Attachment " + attachmentId + " is not a patch");
+            theAttachment = null;
+        }
+    }
+
+    if (theAttachment == null)
         showChooseAttachment();
+    else if (thePatch != null)
+        start();
 }
 
 function gotAttachment(text) {
     thePatch = new Patch.Patch(text);
-    theReview = new Review.Review(thePatch);
-
-    if (theBug !== undefined && thePatch !== undefined)
+    if (theAttachment != null)
         start();
 }
 

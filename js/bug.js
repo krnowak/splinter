@@ -98,6 +98,16 @@ Bug.prototype = {
         this.comments = [];
     },
 
+    getAttachment : function(attachmentId) {
+        for (i = 0; i < this.attachments.length; i++) {
+            var attachment = theBug.attachments[i];
+            if (attachment.id == attachmentId)
+                return attachment;
+            }
+
+        return null;
+    },
+
     getReporter : function() {
         return _formatWho(this.reporterName, this.reporterEmail);
     }
