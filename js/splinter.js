@@ -396,10 +396,22 @@ function start(xml) {
     if (!theReview)
         theReview = new Review.Review(thePatch);
 
+    document.title = "Attachment " + theAttachment.id + " - " + theAttachment.description + " - Patch Review";
+
     $("#loading").hide();
-    $("#headers").show();
+    $("#attachmentInfo").show();
     $("#controls").show();
     $("#files").show();
+
+    $("#bugLink").attr('href', newPageUrl(theBug.id));
+
+    $("#attachmentId").text(theAttachment.id);
+    $("#attachmentDesc").text(theAttachment.description);
+    $("#attachmentDate").text(Utils.formatDate(theAttachment.date));
+    if (theAttachment.status != null)
+        $("#attachmentStatus").val(theAttachment.status);
+    else
+        $("#attachmentStatusSpan").hide();
 
     var i;
 
@@ -409,11 +421,6 @@ function start(xml) {
             .appendTo($("#attachmentStatus"));
     }
 
-    $("#bugId").text(theBug.id);
-    $("#bugShortDesc").text(theBug.shortDesc);
-    $("#bugReporter").text(theBug.getReporter());
-    $("#bugCreationDate").text(Utils.formatDate(theBug.creationDate));
-
     if (thePatch.intro)
         $("#patchIntro").text(thePatch.intro);
     else
@@ -422,14 +429,6 @@ function start(xml) {
     $("#myComment")
         .val(theReview.intro)
         .keypress(queueSaveDraft);
-
-    $("#attachmentId").text(theAttachment.id);
-    $("#attachmentDesc").text(theAttachment.description);
-    $("#attachmentDate").text(Utils.formatDate(theAttachment.date));
-    if (theAttachment.status != null)
-        $("#attachmentStatus").val(theAttachment.status);
-    else
-        $("#attachmentStatusSpan").hide();
 
     for (i = 0; i < theBug.comments.length; i++) {
         var comment = theBug.comments[i];
@@ -461,6 +460,13 @@ function start(xml) {
 
 function gotBug(xml) {
     theBug = Bug.Bug.fromDOM(xml);
+
+    $("#headers").show();
+
+    $("#bugId").text(theBug.id);
+    $("#bugShortDesc").text(theBug.shortDesc);
+    $("#bugReporter").text(theBug.getReporter());
+    $("#bugCreationDate").text(Utils.formatDate(theBug.creationDate));
 
     if (attachmentId != null) {
         theAttachment = theBug.getAttachment(attachmentId);
@@ -545,6 +551,9 @@ function showEnterBug() {
 }
 
 function showChooseAttachment() {
+    document.title = "Bug " + theBug.id + " - " + theBug.shortDesc + " - Patch Review";
+    $("#originalBugLink").attr('href', configBugzillaUrl + "/show_bug.cgi?id=" + theBug.id);
+
     var drafts = {};
     var published = {};
     if (reviewStorage) {

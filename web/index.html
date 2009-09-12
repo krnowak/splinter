@@ -10,20 +10,20 @@
     </script>
   </head>
   <body>
-    <div id="loading">Loading....</div>
     <div id="headers" style="display: none;">
       <div id="bugInfo">
-	Bug <span id="bugId"></span> -
+	<a id="bugLink">Bug <span id="bugId"></span></a> -
 	<span id="bugShortDesc"></span> -
 	<span id="bugReporter"></span> -
 	<span id="bugCreationDate"></span>
       </div>
-      <div id="attachmentInfo">
+      <div id="attachmentInfo" style="display: none;">
 	Attachment <span id="attachmentId"></span> -
 	<span id="attachmentDesc"></span> -
 	<span id="attachmentDate"></span>
       </div>
     </div>
+    <div id="loading">Loading....</div>
     <div id="error" style="display: none;">
     </div>
     <div id="enterBug" style="display: none;">
@@ -44,6 +44,7 @@
 	<tbody>
 	</tbody>
       </table>
+      <a id="originalBugLink">Go to bug</a>
     </div>
     <div id="controls" style="display: none;">
       <div id="patchIntro">

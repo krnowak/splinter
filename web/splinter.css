@@ -9,8 +9,12 @@ body {
 #headers {
     background: black;
     color: white;
-    font-size: 80%;
+    font-size: 90%;
     padding: 0.5em;
+}
+
+#headers a {
+    color: white;
 }
 
 #error {
@@ -34,6 +38,10 @@ body {
 
 #chooseAttachment {
     padding: 0.5em;
+}
+
+#chooseAttachment table {
+    margin-bottom: 1em;
 }
 
 .attachment-draft .attachment-id, .attachment-draft .attachment-desc {

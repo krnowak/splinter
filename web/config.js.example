@@ -1,6 +1,14 @@
+# Base URL for links to Bugzilla
+configBugzillaUrl = 'http://bugzilla.gnome.org';
+
+# These are the attachment statuses for bugzilla.gnome.org, which is
+# the only Bugzilla instance I'm aware that supports attachment statuses
 configAttachmentStatuses = [
     'none',
-    'reviewed',
+    'accepted-commit_now',
+    'needs-work',
+    'accepted-commit_after_freeze',
+    'committed',
     'rejected',
-    'committed'
+    'reviewed
 ];
