@@ -1,31 +1,122 @@
-Reviews are comments that start with the text "Review of attachment <attachment_id>:"
+A review is based upon a diff (conventionally a unified diff,
+but the actual format doesn't matter. All lines mentioned in the
+review must, however, be in the diff, either as an edited line
+or as context.)
 
-The review can start with free form comments that apply to the whole patch.
-A line of the form ::: <filename> introduces comments about a particular file
+In Bugzilla, reviews are represented Bugzilla comments that start with
+the text "Review of attachment <attachment_id>:" The attachment
+referred to must be a patch.
 
-Each comment is introduced by a small amount of context, which is formatted as
-a unified diff hunk.
+The review can start with free form comments that apply to the whole
+patch.  A line of the form ::: <filename> introduces comments about a
+particular file
 
-Example:
+Comments are represented in a form somewhat similar to a "hunk" of a
+unified diff. A comment is of three types, distinguished by the
+leading text of the intro:
+
+REMOVED: @@ -I,J @@
+
+  A comment about the line I+J-1 in the old version of the file.
+
+ADDED: @@ +K,L @@
+
+  A comment about the line K+L-1 in the new version of the file.
+
+CHANGED: @@ -I,J +K,L @@
+
+  A comment about the lines in the range [I,J) in the old version
+  of the file being turned into the range [K,L) in the new version
+  of the file.
+
+As with a unified diff, the header is followed by lines beginning
+with:
+
+ ' ' - a line of context
+ '-' - a removed line
+ '+' - an added line
+ '\' - suppresses the newline on the previous line
+
+ J = lines of context + added lines
+ L = lines of context + removed lines
+
+The actually text following the first character isn't important for
+the automated parsing of the review - it's there to make the review
+human readable. It would be normally be the line from the old or new
+version as appropriate, though long lines might possibly be truncated
+or white space normalized.
+
+In addition, an abbrevation is supported: if a line begins with
+
+ ... N <possibly more text>
+
+Then that means that there are N lines of the previous type omitted.
+
+After all the lines specified by the header have been used up, following
+lines up to the next line beginning with "@@" or ":::" is the text
+of the comment. (Leading and trailing whitespace on the comment is
+ignore.)
+
+
+Example
+=======
+
+Given the unified diff
 
 ==========
-Review of attachment 123042:
-
-<overall comments>
-
-::: foo/bar/somefile.c
-@@ -264,2 +264,3 @@ gjs_invoke_c_function(JSContext      *context,
-+    return_values = NULL; /* Quiet gcc warning about initialization */
-     if (n_return_values > 0) {
-         if (invoke_ok) {
-
-<comment on change >
-
-@@ -318,1 +317,1 @@ import_file(JSContext  *context,
--    if (!finish_import(context, obj))
-+    if (!finish_import(context, name))
-
-<comment on change>
+--- animal-list
++++ animal-list
+@ -10,9 +10,7
+ Coati
+-Capybara
+-Dromedary
+-Kangaroo
+-Koala
+-Kookaburra
++Okapi
++Oppossum
+ Ptarmigan
+ Quail
+ Quetzalcoatl
+-Sturgeon
++Vole
+\ No newline at end of file
 ==========
 
+A review might look like:
 
+==========
+I don't really understand the rhyme and reason behind this change,
+it seems pretty random.
+
+::: animal-list
+@@ -10,6 +10,3 @@
+ Coati
+-Capybara
+-Dromedary
+... 3 more ...
++Okapi
++Oppossum
+
+Here you've removed three Australian animals without any replacements
+
+@@ -14,2 @@
+-Koala
+-Kookaburra
+
+I'm particularly sad to see the Kookaburra. It has two K's.
+
+@@ +15,2 @@
+ Quetzalcoatl
++Vole
+\ No newline at end of file
+
+The vole is a nice addition to the list. The last line should end
+with a newline too to keep 'vi' users happy.
+==========
+
+Note that it's OK for lines to appear in multiple comments - the lines
+'-Koala' '-Kookaburra' are in both the first comment and in the second
+comment. The one restriction is that two reviews of the same type
+can't end with the same line. (For a changed review, the pair of
+old-line and new-line must be distinct.)

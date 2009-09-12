@@ -129,66 +129,123 @@ function getQueryParams() {
     return params;
 }
 
+function ensureCommentArea(row) {
+    if (!row.nextSibling || row.nextSibling.className != "comment-area")
+        $("<tr class='comment-area'><td colSpan='3'>"
+          + "</td></tr>")
+            .insertAfter(row);
 
-function saveComment(row, editorQuery, file, location) {
+    return row.nextSibling.firstChild;
+}
+
+function getTypeClass(type) {
+    switch (type) {
+    case Patch.ADDED:
+        return "comment-added";
+    case Patch.REMOVED:
+        return "comment-removed";
+    case Patch.CHANGED:
+        return "comment-changed";
+    }
+
+    return null;
+}
+
+function getSeparatorClass(type) {
+    switch (type) {
+    case Patch.ADDED:
+        return "comment-separator-added";
+    case Patch.REMOVED:
+        return "comment-separator-removed";
+    }
+
+    return null;
+}
+
+function addCommentDisplay(row, comment, commentorIndex) {
+    var commentArea = ensureCommentArea(row);
+
+    var separatorClass = getSeparatorClass(comment.type);
+    if (separatorClass)
+        $("<div></div>")
+            .addClass(separatorClass)
+            .addClass("comment-"+ commentorIndex)
+            .appendTo(commentArea);
+
+    $("<div class='comment'>"
+      + "<div class='comment-frame'>"
+      + "<div class='comment-text'></div>"
+      + "</div>"
+      + "</div>")
+        .find(".comment-text").text(comment.comment).end()
+        .addClass(getTypeClass(comment.type))
+        .addClass("comment-"+ commentorIndex)
+        .appendTo(commentArea)
+        .dblclick(function() {
+                      insertCommentEditor(row, comment.type);
+                  });
+}
+
+function saveComment(row, file, location, type) {
+    var commentArea = ensureCommentArea(row);
     var reviewFile = theReview.getFile(file.filename);
-    var comment = reviewFile.getComment(location);
+    var comment = reviewFile.getComment(location, type);
 
-    var value = Utils.strip(editorQuery.find("textarea").val());
+    var value = Utils.strip($(commentArea).find("textarea").val());
     if (value != "") {
         if (comment)
             comment.comment = value;
         else
-            reviewFile.addComment(location, value);
+            comment = reviewFile.addComment(location, type, value);
 
-        $("<tr class='my-comment'><td colSpan='3'>"
-          + "<div></div>"
-          + "</td></tr>")
-            .find("div").text(value).end()
-            .insertBefore(editorQuery)
-            .dblclick(function() {
-                          insertCommentEditor(row);
-                      });
+        addCommentDisplay(row, comment, 0);
     } else {
         if (comment)
             comment.remove();
     }
 
-    editorQuery.remove();
+    if (reviewFile.comments.length == 0) {
+        $(commentArea).parent().remove();
+    } else {
+        $(commentArea).find(".comment-editor").remove();
+    }
 }
 
-function insertCommentEditor(row) {
-    var file = $(row).data('patchFile');
-    var location = $(row).data('patchLocation');
+function insertCommentEditor(clickRow, clickType) {
+    var file = $(clickRow).data('patchFile');
+    var clickLocation = $(clickRow).data('patchLocation');
 
-    var insertAfter = row;
-    while (insertAfter.nextSibling) {
-        if (insertAfter.nextSibling.className == "comment-editor")
-            return;
-        if (insertAfter.nextSibling.className == "my-comment") {
-            $(insertAfter.nextSibling).remove();
-            if (!insertAfter.nextSibling)
-                break;
-        }
-        if (insertAfter.nextSibling.className != "comment")
-            break;
-        insertAfter = insertAfter.nextSibling;
-    }
+    var row = clickRow;
+    var location = clickLocation;
+    var type = clickType;
 
     var reviewFile = theReview.getFile(file.filename);
-    var comment = reviewFile.getComment(location);
-    var editorRow = $("<tr class='comment-editor'><td colSpan='3'>"
-                      + "<div>"
-                      + "<textarea></textarea>"
-                      + "</div>"
-                      + "</td></tr>");
-    editorRow.insertAfter(insertAfter);
-    editorRow.find('textarea')
-        .text(comment ? comment.comment : "")
-        .blur(function() {
-                  saveComment(row, editorRow, file, location);
-              })
-        .each(function() { this.focus(); });
+    var comment = reviewFile.getComment(location, type);
+
+    var commentArea = ensureCommentArea(row);
+
+    var typeClass = getTypeClass(type);
+    var separatorClass = getSeparatorClass(type);
+
+    if (comment) {
+        if (separatorClass)
+            $(commentArea).find(".comment-0." + separatorClass).remove();
+        $(commentArea).find(".comment-0." + typeClass).remove();
+    }
+
+    if (separatorClass)
+        $("<div class='comment-editor'></div>")
+            .addClass(separatorClass)
+            .appendTo(commentArea);
+    $("<div class='comment-editor'><textarea></textarea></div>")
+        .addClass(typeClass)
+        .appendTo(commentArea)
+        .find('textarea')
+            .val(comment ? comment.comment : "")
+            .blur(function() {
+                      saveComment(row, file, location, type);
+                  })
+            .each(function() { this.focus(); });
 }
 
 function EL(element, cls, text) {
@@ -255,23 +312,29 @@ function addPatchFile(file) {
 
                          $(tr).data('patchFile', file);
                          $(tr).data('patchLocation', loc);
-                         $(tr).dblclick(function() {
-                                            insertCommentEditor(this);
+                         $(tr).dblclick(function(e) {
+                                            var leftX = this.offsetLeft;
+                                            var parent = this.offsetParent;
+                                            while (parent != document.body) {
+                                                leftX += parent.offsetLeft;
+                                                parent = parent.offsetParent;
+                                            }
+                                            var delta = e.pageX - (leftX + this.offsetWidth/2);
+                                            var type;
+                                            if (delta < - 20)
+                                                type = Patch.REMOVED;
+                                            else if (delta < 20)
+                                                type = Patch.CHANGED;
+                                            else
+                                                type = Patch.ADDED;
+                                            insertCommentEditor(this, type);
                                         });
 
                          tbody.appendChild(tr);
 
-                         if (line.reviewComments != null) {
-                             for (var k = 0; k < line.reviewComments.length; k++) {
-                                 var comment = line.reviewComments[k];
-
-                                 $("<tr class='comment'><td colSpan='3'>"
-                                   + "<div></div>"
-                                   + "</td></tr>")
-                                     .find("div").text(comment.comment).end()
-                                     .appendTo(tbody);
-                             }
-                         }
+                         if (line.reviewComments != null)
+                             for (var k = 0; k < line.reviewComments.length; k++)
+                                 addCommentDisplay(tr, line.reviewComments[k], 1);
                      });
     }
 }

@@ -11,13 +11,14 @@ function _removeFromArray(a, element) {
     }
 }
 
-function Comment(file, location, comment) {
-    this._init(file, location, comment);
+function Comment(file, location, type, comment) {
+    this._init(file, location, type, comment);
 }
 
 Comment.prototype = {
-    _init : function(file, location, comment) {
+    _init : function(file, location, type, comment) {
         this.file = file;
+        this.type = type;
         this.location = location;
         this.comment = comment;
     },
@@ -34,11 +35,19 @@ function _noNewLine(flags, flag) {
     return ((flags & flag) != 0) ? "\n\ No newline at end of file" : "";
 }
 
+function _lineInSegment(line) {
+    return (line[2] & (Patch.ADDED | Patch.REMOVED | Patch.CHANGED)) != 0;
+}
+
 function _compareSegmentLines(a, b) {
-    var op1 = a.substr(0, 1);
-    var op2 = b.substr(0, 1);
-    if (op1 == op2)
+    var op1 = a[0];
+    var op2 = b[0];
+     if (op1 == op2)
         return 0;
+    else if (op1 == ' ')
+        return -1;
+    else if (op2 == ' ')
+        return 1;
     else
         return op1 == '-' ? -1 : 1;
 }
@@ -54,27 +63,32 @@ File.prototype = {
         this.comments = [];
     },
 
-    addComment : function(location, comment) {
+    addComment : function(location, type, comment) {
         var hunk = this.patchFile.getHunk(location);
         var line = hunk.lines[location - hunk.location];
-        comment = new Comment(this, location, comment);
+        comment = new Comment(this, location, type, comment);
         if (line.reviewComments == null)
             line.reviewComments = [];
         line.reviewComments.push(comment);
         for (var i = 0; i <= this.comments.length; i++) {
-            if (i == this.comments.length || this.comments[i].location > location) {
+            if (i == this.comments.length ||
+                this.comments[i].location > location ||
+                (this.comments[i].location == location && this.comments[i].type > type)) {
                 this.comments.splice(i, 0, comment);
                 break;
-            } else if (this.comments[i].location == location) {
+            } else if (this.comments[i].location == location &&
+                       this.comments[i].type == type) {
                 throw "Two comments at the same location";
-                break;
             }
         }
+
+        return comment;
     },
 
-    getComment : function(location, comment) {
+    getComment : function(location, type) {
         for (var i = 0; i < this.comments.length; i++)
-            if (this.comments[i].location == location)
+            if (this.comments[i].location == location &&
+                this.comments[i].type == type)
                 return this.comments[i];
 
         return null;
@@ -86,7 +100,6 @@ File.prototype = {
         str += '\n';
         var first = true;
 
-        var lastCommentLocation = 0;
         for (var i = 0; i < this.comments.length; i++) {
             if (first)
                 first = false;
@@ -94,65 +107,145 @@ File.prototype = {
                 str += '\n';
             var comment = this.comments[i];
             var hunk = this.patchFile.getHunk(comment.location);
-            var context = Math.min(comment.location - lastCommentLocation - 1,
-                                   comment.location - hunk.location,
-                                   2);
 
-            var patchOldStart, patchNewStart;
+            // Find the range of lines we might want to show. That's everything in the
+            // same segment as the commented line, plus up two two lines of non-comment
+            // diff before.
+
+            var contextFirst = comment.location - hunk.location;
+            if (_lineInSegment(hunk.lines[contextFirst])) {
+                while (contextFirst > 0 && _lineInSegment(hunk.lines[contextFirst - 1]))
+                    contextFirst--;
+            }
+
+            var j;
+            for (j = 0; j < 2; j++)
+                if (contextFirst > 0 && !_lineInSegment(hunk.lines[contextFirst - 1]))
+                    contextFirst--;
+
+            // Now get the diff lines (' ', '-', '+' for that range of lines)
+
+            var patchOldStart = null;
+            var patchNewStart = null;
             var patchOldLines = 0;
             var patchNewLines = 0;
+            var unchangedLines = 0;
             var patchLines = [];
 
-            hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags) {
-                             if (loc == comment.location - context) {
-                                 patchOldStart = oldLine;
-                                 patchNewStart = newLine;
-                             }
+            function addOldLine(oldLine) {
+                if (patchOldLines == 0)
+                    patchOldStart = oldLine;
+                patchOldLines++;
+            }
 
-                             if (loc >= comment.location - context && loc <= comment.location) {
-                                 if (oldText != null)
-                                     patchOldLines++;
-                                 if (newText != null)
-                                     patchNewLines++;
-                                 if ((flags & (Patch.ADDED | Patch.REMOVED | Patch.CHANGED)) != 0) {
-                                     if (oldText != null)
-                                         patchLines.push('-' + oldText +_noNewLine(flags, Patch.OLD_NONEWLINE));
-                                     if (newText != null)
-                                         patchLines.push('+' + newText + _noNewLine(flags, Patch.NEW_NONEWLINE));
-                                 } else {
+            function addNewLine(newLine) {
+                if (patchNewLines == 0)
+                    patchNewStart = newLine;
+                patchNewLines++;
+            }
+
+            hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags) {
+                             if (loc >= hunk.location + contextFirst && loc <= comment.location) {
+                                 if ((flags & (Patch.ADDED | Patch.REMOVED | Patch.CHANGED)) == 0) {
                                      patchLines.push(' ' + oldText + _noNewLine(flags, Patch.OLD_NONEWLINE | Patch.NEW_NONEWLINE));
+                                     addOldLine(oldLine);
+                                     addNewLine(newLine);
+                                     unchangedLines++;
+                                 } else {
+                                     if ((comment.type == Patch.REMOVED || comment.type == Patch.CHANGED) && oldText != null) {
+                                         patchLines.push('-' + oldText +_noNewLine(flags, Patch.OLD_NONEWLINE));
+                                         addOldLine(oldLine);
+                                     }
+                                     if ((comment.type == Patch.ADDED || comment.type == Patch.CHANGED) && newText != null) {
+                                         patchLines.push('+' + newText + _noNewLine(flags, Patch.NEW_NONEWLINE));
+                                         addNewLine(newLine);
+                                     }
                                  }
                              }
                          });
 
-            var segStart = 0;
-            for (var k = 0; k <= patchLines.length; k++) {
-                if (k == patchLines.length || patchLines[k].substr(0, 1) == ' ') {
-                    if (segStart < k) {
-                        var segmentLines = patchLines.slice(segStart, k);
-                        segmentLines.sort(_compareSegmentLines);
-                        for (var l = 0; l < segmentLines.length; l++)
-                            patchLines[segStart + l] = segmentLines[l];
-                    }
-                    segStart = k + 1;
-                }
-            }
+            // Sort them into global order ' ', '-', '+'
+            patchLines.sort(_compareSegmentLines);
 
-            while (Utils.strip(patchLines[0]) == '') {
+            // Completely blank context isn't useful so remove it
+            while (patchLines[0].match(/^\s*$/)) {
                 patchLines.shift();
                 patchOldStart++;
                 patchNewStart++;
                 patchOldLines--;
                 patchNewLines--;
+                unchangedLines--;
             }
 
-            str += '@@ -' + patchOldStart + ',' + patchOldLines + ' +' + patchNewStart + ',' + patchNewLines + ' @@\n';
-            str += patchLines.join("\n");
-            str += "\n\n";
+            if (comment.type == Patch.CHANGED) {
+                // For a CHANGED comment, we have to show the the start of the hunk - but to save
+                // in length we can trim unchanged context before it
+
+                if (patchOldLines + patchNewLines - unchangedLines > 5) {
+                    var toRemove = Math.min(unchangedLines, patchOldLines + patchNewLines - unchangedLines - 5);
+                    patchLines.splice(0, toRemove);
+                    patchOldStart += toRemove;
+                    patchNewStart += toRemove;
+                    patchOldLines -= toRemove;
+                    patchNewLines -= toRemove;
+                    unchangedLines -= toRemove;
+                }
+
+                str += '@@ -' + patchOldStart + ',' + patchOldLines + ' +' + patchNewStart + ',' + patchNewLines + ' @@\n';
+
+                // We will use up to 8 lines more:
+                //  4 old lines or 3 old lines and a "... <N> more ... " line
+                //  4 new lines or 3 new lines and a "... <N> more ... " line
+
+                var patchRemovals = patchOldLines - unchangedLines;
+                var showPatchRemovals = patchRemovals > 4 ? 3 : patchRemovals;
+                var patchAdditions = patchNewLines - unchangedLines;
+                var showPatchAdditions = patchAdditions > 4 ? 3 : patchAdditions;
+
+                j = 0;
+                while (j < unchangedLines + showPatchRemovals) {
+                    str += patchLines[j];
+                    str += "\n";
+                    j++;
+                }
+                if (showPatchRemovals < patchRemovals) {
+                    str += "... ";
+                    str += patchRemovals - showPatchRemovals;
+                    str += " more ...\n";
+                    j += patchRemovals - showPatchRemovals;
+                }
+                while (j < unchangedLines + patchRemovals + showPatchAdditions) {
+                    str += patchLines[j];
+                    str += "\n";
+                    j++;
+                }
+                if (showPatchAdditions < patchAdditions) {
+                    str += "... ";
+                    str += patchAdditions - showPatchAdditions;
+                    str += " more ...\n";
+                    j += patchAdditions - showPatchAdditions;
+                }
+            } else {
+                // We limit Patch.ADDED/Patch.REMOVED comments strictly to 3 lines after the header
+                if (patchOldLines + patchNewLines - unchangedLines > 3) {
+                    var toRemove =  patchOldLines + patchNewLines - unchangedLines - 3;
+                    patchLines.splice(0, toRemove);
+                    patchOldStart += toRemove;
+                    patchNewStart += toRemove;
+                    patchOldLines -= toRemove;
+                    patchNewLines -= toRemove;
+                }
+
+                if (comment.type == Patch.REMOVED)
+                    str += '@@ -' + patchOldStart + ',' + patchOldLines + ' @@\n';
+                else
+                    str += '@@ +' + patchNewStart + ',' + patchNewLines + ' @@\n';
+                str += patchLines.join("\n");
+                str += "\n";
+            }
+            str += "\n";
             str += comment.comment;
             str += "\n";
-
-            lastCommentLocation = comment.location;
         }
 
         return str;
@@ -174,7 +267,7 @@ const FILE_START_RE = /^:::[ \t]+(\S+)[ \t]*\n/mg;
 //
 // Hunk start: @@ -23,12 +30,11 @@
 // Followed by: lines that don't start with @@ or :::
-const HUNK_RE = /^@@[ \t]+-(\d+),(\d+)[ \t]+\+(\d+),(\d+)[ \t]+@@.*\n((?:(?!@@|:::).*\n?)*)/mg;
+const HUNK_RE = /^@@[ \t]+(?:-(\d+),(\d+)[ \t]+)?(?:\+(\d+),(\d+)[ \t]+)?@@.*\n((?:(?!@@|:::).*\n?)*)/mg;
 
 Review.prototype = {
     _init : function(patch) {
@@ -216,34 +309,94 @@ Review.prototype = {
                     break;
 
                 pos = HUNK_RE.lastIndex;
-                var oldStart = parseInt(m2[1]);
-                var oldCount = parseInt(m2[2]);
-                var newStart = parseInt(m2[3]);
-                var newCount = parseInt(m2[4]);
 
-                var hunk = new Patch.Hunk(oldStart, oldCount, newStart, newCount, m2[5], true);
+                var oldStart, oldCount, newStart, newCount;
+                if (m2[1] != null) {
+                    oldStart = parseInt(m2[1]);
+                    oldCount = parseInt(m2[2]);
+                } else {
+                    oldStart = oldCount = null;
+                }
 
-                // Numbering of old/new line numbers is
-                //
-                //     A             B
-                // 1 1 2 3 3 4 5 5 5 6 7
-                //   * *   * *     * * *
-                //
-                // Where the * represent lines actually in that version of the file.
-                // So, the difference in line numbers between A and B is the number of
-                // *'s from A to B, not including B.
+                if (m2[3] != null) {
+                    newStart = parseInt(m2[3]);
+                    newCount = parseInt(m2[4]);
+                } else {
+                    newStart = newCount = null;
+                }
 
-                var oldLine = hunk.oldStart + hunk.oldCount;
-                var newLine = hunk.newStart + hunk.newCount;
+                var type;
+                if (oldStart != null && newStart != null)
+                    type = Patch.CHANGED;
+                else if (oldStart != null)
+                    type = Patch.REMOVED;
+                else if (newStart != null)
+                    type = Patch.ADDED;
+                else
+                    throw "Either old or new line numbers must be given";
 
-                var lastLine = hunk.lines[hunk.lines.length - 1];
-                if (lastLine[0] != null)
+                var oldLine = oldStart;
+                var newLine = newStart;
+
+                var rawlines = m2[5].split("\n");
+                if (rawlines.length > 0 && rawlines[rawlines.length - 1].match('^/s+$'))
+                    rawlines.pop(); // Remove trailing element from final \n
+
+                var commentText = null;
+
+                var lastSegmentOld = 0;
+                var lastSegmentNew = 0;
+                for (var i = 0; i < rawlines.length; i++) {
+                    var line = rawlines[i];
+                    var count = 1;
+                    if (i < rawlines.length - 1 && rawlines[i + 1].match(/^... \d+\s+/)) {
+                        var m3 = /^\.\.\.\s+(\d+)\s+/.exec(rawlines[i + 1]);
+                        count += parseInt(m3[1]);
+                        i += 1;
+                    }
+                    if (line.match(/^ /)) {
+                        oldLine += count;
+                        newLine += count;
+                        lastSegmentOld = 0;
+                        lastSegmentNew = 0;
+                    } else if (line.match(/^-/)) {
+                        oldLine += count;
+                        lastSegmentOld += count;
+                    } else if (line.match(/^\+/)) {
+                        newLine += count;
+                        lastSegmentNew += count;
+                    } else if (line.match(/^\\/)) {
+                        // '\ No newline at end of file' - ignore
+                    } else {
+                        throw "Bad content in hunk: " + line;
+                    }
+
+                    if ((oldStart == null || oldLine == oldStart + oldCount) &&
+                        (newStart == null || newLine == newStart + newCount)) {
+                        commentText = rawlines.slice(i + 1).join("\n");
+                        break;
+                    }
+                }
+
+                if (commentText == null)
+                    throw "No comment found in hunk";
+
+
+                var location;
+                if (type == Patch.CHANGED) {
+                    if (lastSegmentOld >= lastSegmentNew)
+                        oldLine--;
+                    if (lastSegmentOld <= lastSegmentNew)
+                        newLine--;
+                    location = file.patchFile.getLocation(oldLine, newLine);
+                } else if (type == Patch.REMOVED) {
                     oldLine--;
-                if (lastLine[1] != null)
+                    location = file.patchFile.getLocation(oldLine, null);
+                } else if (type == Patch.ADDED) {
                     newLine--;
-
-                var location = file.patchFile.getLocation(oldLine, newLine);
-                file.addComment(location, Utils.strip(hunk.comment));
+                    location = file.patchFile.getLocation(null, newLine);
+                }
+                file.addComment(location, type, Utils.strip(commentText));
             }
 
             FILE_START_RE.lastIndex = pos;

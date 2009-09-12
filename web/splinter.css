@@ -120,35 +120,49 @@ body {
     width: 3px;
 }
 
-.my-comment {
+.comment-removed {
+    width: 50%;
+    float: left;
+}
+
+.comment-changed {
+    margin-left: 25%;
+    margin-right: 25%;
+    clear: both;
+}
+
+.comment-added {
+    width: 50%;
+    float: right;
+}
+
+.comment-frame {
     border: 1px solid black;
+    margin: 5px;
 }
 
-.my-comment td {
-    padding: 0px;
-}
-
-.my-comment div {
+.comment-text {
     padding: 0.5em;
-    border-left: 10px solid green;
-    white-space: pre-wrap;
-}
-
-.comment {
-    border: 1px solid black;
-}
-
-.comment td {
-    padding: 0px;
-}
-
-.comment div {
-    padding: 0.5em;
-    border-left: 10px solid blue;
     white-space: pre-wrap;
 }
 
 .comment-editor textarea {
     width: 100%;
     height: 10em;
+}
+
+.comment-0 .comment-text {
+    border-left: 10px solid green;
+}
+
+.comment-1 .comment-text {
+    border-left: 10px solid blue;
+}
+
+.comment-separator-removed {
+    clear: left;
+}
+
+.comment-separator-added {
+    clear: right;
 }

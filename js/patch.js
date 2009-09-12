@@ -45,17 +45,12 @@ const CHANGED       = 1 << 2; // Part of some other segmnet
 const NEW_NONEWLINE = 1 << 3; // Old line doesn't end with \n
 const OLD_NONEWLINE = 1 << 4; // New line doesn't end with \n
 
-// Note that we use this constructor both when parsing a patch and when
-// parsing a review in review.js
-function Hunk(oldStart, oldCount, newStart, newCount, text, parseComment) {
-    this._init(oldStart, oldCount, newStart, newCount, text, parseComment);
+function Hunk(oldStart, oldCount, newStart, newCount, text) {
+    this._init(oldStart, oldCount, newStart, newCount, text);
 }
 
 Hunk.prototype = {
-    _init : function(oldStart, oldCount, newStart, newCount, text, parseComment) {
-        if (parseComment == null)
-            parseComment = false;
-
+    _init : function(oldStart, oldCount, newStart, newCount, text) {
         var rawlines = text.split("\n");
         if (rawlines.length > 0 && Utils.strip(rawlines[rawlines.length - 1]) == "")
             rawlines.pop(); // Remove trailing element from final \n
@@ -130,14 +125,10 @@ Hunk.prototype = {
             } else if (op == '\\') {
                 // Handled with preceding line
             } else {
-                Utils.assertNotReached();
-            }
-
-            // When parsing a review, we stop when we've gotten all the lines described
-            // in the chunk header - anything after that is the comment
-            if (parseComment && totalOld >= oldCount && totalNew >= newCount) {
-                this.comment = rawlines.slice(i + 1).join("\n");
-                break;
+                // Junk in the patch - hope the patch got line wrapped and just ignoring
+                // it produces something meaningful. (For a patch displayer, anyways.
+                // would be bad for applying the patch.)
+                // Utils.assertNotReached();
             }
         }
 
@@ -192,13 +183,17 @@ File.prototype = {
     getLocation : function(oldLine, newLine) {
         for (var i = 0; i < this.hunks.length; i++) {
             var hunk = this.hunks[i];
-            if (hunk.oldStart > oldLine)
+            if (oldLine != null && hunk.oldStart > oldLine)
+                continue;
+            if (newLine != null && hunk.oldStart > newLine)
                 continue;
 
-            if (oldLine < hunk.oldStart + hunk.oldCount) {
+            if ((oldLine != null && oldLine < hunk.oldStart + hunk.oldCount) ||
+                newLine != null && newLine < hunk.newStart + hunk.newCount) {
                 var location = -1;
                 hunk.iterate(function(loc, oldl, oldText, newl, newText, flags) {
-                                 if (oldl == oldLine && newl == newLine)
+                                 if ((oldLine == null || oldl == oldLine) &&
+                                     (newLine == null || newl == newLine))
                                      location = loc;
                              });
 

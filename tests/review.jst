@@ -53,12 +53,12 @@ I like this patch
 
 let argC = r.getFile('gi/arg.c');
 let loc = argC.patchFile.getLocation(216,215);
-r.getFile('gi/arg.c').addComment(loc, 'Should you have removed elem?');
+r.getFile('gi/arg.c').addComment(loc, Patch.REMOVED, 'Should you have removed elem?');
 assertEquals(<<<
 I like this patch
 
 ::: gi/arg.c
-@@ -214,3 +214,1 @@
+@@ -214,3 @@
  {
 -    guint32 i;
 -    jsval elem;
@@ -67,12 +67,12 @@ Should you have removed elem?
 >>>, r.toString());
 
 let loc = argC.patchFile.getLocation(1130,1128);
-r.getFile('gi/arg.c').addComment(loc, 'This comment seems unnecessary');
+r.getFile('gi/arg.c').addComment(loc, Patch.CHANGED, 'This comment seems unnecessary');
 assertEquals(<<<
 I like this patch
 
 ::: gi/arg.c
-@@ -214,3 +214,1 @@
+@@ -214,3 @@
  {
 -    guint32 i;
 -    jsval elem;
@@ -90,12 +90,12 @@ This comment seems unnecessary
 >>>, r.toString());
 
 loc = argC.patchFile.getLocation(1128,1126);
-argC.addComment(loc, "Why this transfer?");
+argC.addComment(loc, Patch.CHANGED, "Why this transfer?");
 assertEquals(<<<
 I like this patch
 
 ::: gi/arg.c
-@@ -214,3 +214,1 @@
+@@ -214,3 @@
  {
 -    guint32 i;
 -    jsval elem;
@@ -108,7 +108,8 @@ Should you have removed elem?
 
 Why this transfer?
 
-@@ -1129,2 +1127,2 @@
+@@ -1128,3 +1126,3 @@
+     if (transfer == GI_TRANSFER_EVERYTHING)
 -        /* We're done */
 -        return;
 +        /* Success! */
@@ -117,14 +118,87 @@ Why this transfer?
 This comment seems unnecessary
 >>>, r.toString());
 
-
 let r2 = new Review.Review(p);
 r2.parse(r.toString());
 assertEquals(r.toString(), r2.toString());
 
 loc = argC.patchFile.getLocation(216,215);
-let comment = argC.getComment(loc);
+let comment = argC.getComment(loc, Patch.REMOVED);
 assertEquals(loc, comment.location);
+assertEquals(Patch.REMOVED, comment.type);
 comment.remove();
 
 assertEquals(null, argC.getComment(loc));
+
+let patch_text = <<<
+diff a/foo.c b/foo.c
+--- a/foo.c
++++ b/foo.c
+@@ -1,16 +1,16 @@
+ C1
+ C2
+ C3
+ C4
+-A5
+-A6
+-A7
+-A8
+-A9
+-A10
+-A11
+-A12
++B5
++B6
++B7
++B8
++B9
++B10
++B11
++B12
+ C13
+ C14
+ C15
+ C16
+>>>;
+
+p = new Patch.Patch(patch_text);
+r = new Review.Review(p);
+
+let f = r.getFile('foo.c');
+f.addComment(4, Patch.REMOVED, "Line A5 was removed")
+f.addComment(5, Patch.ADDED, "Line B6 was added")
+f.addComment(11, Patch.CHANGED, "8 lines were changed")
+
+assertEquals(<<<
+::: foo.c
+@@ -3,3 @@
+ C3
+ C4
+-A5
+
+Line A5 was removed
+
+@@ +4,3 @@
+ C4
++B5
++B6
+
+Line B6 was added
+
+@@ -5,8 +5,8 @@
+-A5
+-A6
+-A7
+... 5 more ...
++B5
++B6
++B7
+... 5 more ...
+
+8 lines were changed
+>>>, r.toString())
+
+let r2 = new Review.Review(p);
+r2.parse(r.toString());
+assertEquals(r.toString(), r2.toString());
+
