@@ -24,11 +24,23 @@ body {
     padding: 0.5em;
 }
 
+#chooseReview {
+    margin-top: 1em;
+}
+
+.review-draft .review-desc, .review-draft .review-attachment {
+    font-weight: bold;
+}
+
 #chooseAttachment {
     padding: 0.5em;
 }
 
-.attachment-obsolete {
+.attachment-draft .attachment-id, .attachment-draft .attachment-desc {
+    font-weight: bold;
+}
+
+.attachment-obsolete .attachment-desc {
     text-decoration: line-through ;
 }
 

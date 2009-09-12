@@ -506,9 +506,60 @@ function showEnterBug() {
                            });
     $("#loading").hide();
     $("#enterBug").show();
+
+    if (!reviewStorage)
+        return;
+
+    var storedReviews = reviewStorage.listReviews();
+    if (storedReviews.length == 0)
+        return;
+
+    $("#chooseReview").show();
+
+    for (var i = storedReviews.length - 1; i >= 0; i--) {
+        var reviewInfo = storedReviews[i];
+        var href = newPageUrl(reviewInfo.bugId, reviewInfo.attachmentId);
+        var modificationDate = Utils.formatDate(new Date(reviewInfo.modificationTime));
+
+        var extra = reviewInfo.isDraft ? "(draft)" : "";
+
+        $("<tr>"
+          + "<td class='review-bug'>Bug <span></span></td>"
+          + "<td class='review-attachment'><a></a></td>"
+          + "<td class='review-desc'><a></a></td>"
+          + "<td class='review-modification'></td>"
+          + "<td class='review-extra'></td>"
+          + "</tr>")
+            .addClass(reviewInfo.isDraft ? "review-draft" : "")
+            .find(".review-bug span").text(reviewInfo.bugId).end()
+            .find(".review-attachment a")
+                .attr("href", href)
+                .text("Attachment " + reviewInfo.attachmentId).end()
+            .find(".review-desc a")
+                .attr("href", href)
+                .text(reviewInfo.attachmentDescription).end()
+            .find(".review-modification").text(modificationDate).end()
+            .find(".review-extra").text(extra).end()
+            .appendTo("#chooseReview tbody");
+    }
 }
 
 function showChooseAttachment() {
+    var drafts = {};
+    var published = {};
+    if (reviewStorage) {
+        var storedReviews = reviewStorage.listReviews();
+        for (var j = 0; j < storedReviews.length; j++) {
+            var reviewInfo = storedReviews[j];
+            if (reviewInfo.bugId == theBug.id) {
+                if (reviewInfo.isDraft)
+                    drafts[reviewInfo.attachmentId] = 1;
+                else
+                    published[reviewInfo.attachmentId] = 1;
+            }
+        }
+    }
+
     for (var i = 0; i < theBug.attachments.length; i++) {
         var attachment = theBug.attachments[i];
 
@@ -521,22 +572,32 @@ function showChooseAttachment() {
         var status = (attachment.status && attachment.status != 'none') ? attachment.status : '';
 
         var obsoleteClass = attachment.isObsolete ? "attachment-obsolete" : '';
+        var draftClass = attachment.id in drafts ? "attachment-draft" : '';
+
+        var extra = '';
+        if (attachment.id in drafts)
+            extra = '(draft)';
+        else if (attachment.id in published)
+            extra = '(published)';
 
         $("<tr>"
           + "<td class='attachment-id'><a></a></td>"
           + "<td class='attachment-desc'><a></a></td>"
           + "<td class='attachment-date'></td>"
           + "<td class='attachment-status'></td>"
+          + "<td class='attachment-extra'></td>"
           + "</tr>")
+            .addClass(obsoleteClass)
+            .addClass(draftClass)
             .find(".attachment-id a")
                 .attr("href", href)
                 .text(attachment.id).end()
             .find(".attachment-desc a")
-                .addClass(obsoleteClass)
                 .attr("href", href)
                 .text(attachment.description).end()
             .find(".attachment-date").text(date).end()
             .find(".attachment-status").text(status).end()
+            .find(".attachment-extra").text(extra).end()
             .appendTo("#chooseAttachment tbody");
     }
 
