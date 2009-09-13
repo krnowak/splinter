@@ -11,6 +11,8 @@ var theAttachment;
 var thePatch;
 var theReview;
 
+var reviewers = {};
+
 var saveDraftTimeoutId;
 var saveDraftNoticeTimeoutId;
 var savingDraft = false;
@@ -203,34 +205,51 @@ function getSeparatorClass(type) {
     return null;
 }
 
+function getReviewerClass(review) {
+    var reviewerIndex;
+    if (review == theReview)
+        reviewerIndex = 0;
+    else
+        reviewerIndex = (reviewers[review.who] - 1) % 5 + 1;
+
+    return "reviewer-" + reviewerIndex;
+}
+
 function addCommentDisplay(row, comment) {
     var commentArea = ensureCommentArea(row);
-
-    var commentorIndex;
-    if (comment.file.review == theReview)
-        commentorIndex = 0;
-    else
-        commentorIndex = 1;
+    var review = comment.file.review;
 
     var separatorClass = getSeparatorClass(comment.type);
     if (separatorClass)
         $("<div></div>")
             .addClass(separatorClass)
-            .addClass("comment-"+ commentorIndex)
+            .addClass(getReviewerClass(review))
             .appendTo(commentArea);
 
-    $("<div class='comment'>"
+    var q = $("<div class='comment'>"
       + "<div class='comment-frame'>"
+      + "<div class='reviewer-box'>"
       + "<div class='comment-text'></div>"
+      + "</div>"
       + "</div>"
       + "</div>")
         .find(".comment-text").text(comment.comment).end()
         .addClass(getTypeClass(comment.type))
-        .addClass("comment-"+ commentorIndex)
+        .addClass(getReviewerClass(review))
         .appendTo(commentArea)
         .dblclick(function() {
                       insertCommentEditor(row, comment.type);
                   });
+
+    if (review != theReview) {
+        $("<div class='review-info'>"
+          + "<div class='reviewer'></div><div class='review-date'></div>"
+          + "<div class='review-info-bottom'></div>"
+          + "</div>")
+            .find(".reviewer").text(review.who).end()
+            .find(".review-date").text(Utils.formatDate(review.date)).end()
+            .appendTo(q.find(".reviewer-box"));
+    }
 }
 
 function saveComment(row, file, location, type) {
@@ -278,8 +297,8 @@ function insertCommentEditor(clickRow, clickType) {
 
     if (comment) {
         if (separatorClass)
-            $(commentArea).find(".comment-0." + separatorClass).remove();
-        $(commentArea).find(".comment-0." + typeClass).remove();
+            $(commentArea).find(".reviewer-0." + separatorClass).remove();
+        $(commentArea).find(".reviewer-0." + typeClass).remove();
     }
 
     if (separatorClass)
@@ -430,22 +449,33 @@ function start(xml) {
         .val(theReview.intro)
         .keypress(queueSaveDraft);
 
+    var numReviewers = 0;
     for (i = 0; i < theBug.comments.length; i++) {
         var comment = theBug.comments[i];
         var m = REVIEW_RE.exec(comment.text);
 
         if (m && parseInt(m[1]) == attachmentId) {
-            var review = new Review.Review(thePatch);
+            var review = new Review.Review(thePatch, comment.getWho(), comment.date);
             review.parse(comment.text.substr(m[0].length));
 
+            var reviewerIndex;
+            if (review.who in reviewers)
+                reviewerIndex = reviewers[review.who];
+            else {
+                reviewerIndex = ++numReviewers;
+                reviewers[review.who] = reviewerIndex;
+            }
+
             $("<div class='review'>"
-              + "<div class='review-inner'>"
-              + "<div><span class='reviewer'></span> - <span class='review-date'></span></div>"
+              + "<div class='reviewer-box'>"
+              + "<div class='reviewer'></div><div class='review-date'></div>"
+              + "<div class='review-info-bottom'></div>"
               + "<div class='review-intro'></div>"
               + "</div>"
               + "</div>")
-                .find(".reviewer").text(comment.getWho()).end()
-                .find(".review-date").text(Utils.formatDate(comment.date)).end()
+                .addClass(getReviewerClass(review))
+                .find(".reviewer").text(review.who).end()
+                .find(".review-date").text(Utils.formatDate(review.date)).end()
                 .find(".review-intro").text(review.intro? review.intro : "").end()
                 .appendTo("#oldReviews");
 

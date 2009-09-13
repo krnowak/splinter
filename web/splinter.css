@@ -69,16 +69,56 @@ body {
     padding: 0.5em;
 }
 
+
+.reviewer-box {
+    padding: 0.5em;
+    white-space: pre-wrap;
+}
+
+.reviewer-0 .reviewer-box {
+    border-left: 10px solid green;
+}
+
+.reviewer-1 .reviewer-box {
+    border-left: 10px solid blue;
+}
+
+.reviewer-2 .reviewer-box {
+    border-left: 10px solid red;
+}
+
+.reviewer-3 .reviewer-box {
+    border-left: 10px solid yellow;
+}
+
+.reviewer-4 .reviewer-box {
+    border-left: 10px solid purple;
+}
+
+.reviewer-5 .reviewer-box {
+    border-left: 10px solid orange;
+}
+
+.reviewer {
+    float: left;
+}
+
+.review-date {
+    float: right;
+}
+
+.review-info-bottom {
+    clear: both;
+}
+
 .review {
     border: 1px solid black;
     font-size: 90%;
     margin-bottom: 1em;
-    white-space: pre-wrap;
 }
 
-.review-inner {
-    border-left: 10px solid blue;
-    padding: 0.5em;
+.review-intro {
+    margin-top: 0.5em;
 }
 
 #myComment {
@@ -166,22 +206,14 @@ body {
     margin: 5px;
 }
 
-.comment-text {
-    padding: 0.5em;
-    white-space: pre-wrap;
+.comment .review-info {
+    margin-top: 0.5em;
+    font-size: 80%;
 }
 
 .comment-editor textarea {
     width: 100%;
     height: 10em;
-}
-
-.comment-0 .comment-text {
-    border-left: 10px solid green;
-}
-
-.comment-1 .comment-text {
-    border-left: 10px solid blue;
 }
 
 .comment-separator-removed {

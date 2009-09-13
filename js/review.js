@@ -252,8 +252,8 @@ File.prototype = {
     }
 };
 
-function Review(patch) {
-    this._init(patch);
+function Review(patch, who, date) {
+    this._init(patch, who, date);
 }
 
 // Indicates start of review comments about a file
@@ -270,9 +270,11 @@ const FILE_START_RE = /^:::[ \t]+(\S+)[ \t]*\n/mg;
 const HUNK_RE = /^@@[ \t]+(?:-(\d+),(\d+)[ \t]+)?(?:\+(\d+),(\d+)[ \t]+)?@@.*\n((?:(?!@@|:::).*\n?)*)/mg;
 
 Review.prototype = {
-    _init : function(patch) {
+    _init : function(patch, who, date) {
         this.date = null;
         this.patch = patch;
+        this.who = who;
+        this.date = date;
         this.intro = null;
         this.files = [];
 
