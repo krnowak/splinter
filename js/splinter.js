@@ -412,21 +412,6 @@ var REVIEW_RE = /^\s*review\s+of\s+attachment\s+(\d+)\s*:\s*/i;
 function start(xml) {
     var i;
 
-    if (reviewStorage) {
-        theReview = reviewStorage.loadDraft(theBug, theAttachment, thePatch);
-        if (theReview) {
-            var storedReviews = reviewStorage.listReviews();
-            $("#restored").show();
-            for (i = 0; i < storedReviews.length; i++) {
-                if (storedReviews[i].bugId == theBug.id &&
-                    storedReviews[i].attachmentId == theAttachment.id)
-                    $("#restoredLastModified").text(Utils.formatDate(new Date(storedReviews[i].modificationTime)));
-            }
-        }
-    }
-    if (!theReview)
-        theReview = new Review.Review(thePatch);
-
     document.title = "Attachment " + theAttachment.id + " - " + theAttachment.description + " - Patch Review";
 
     $("#loading").hide();
@@ -454,10 +439,6 @@ function start(xml) {
         $("#patchIntro").text(thePatch.intro);
     else
         $("#patchIntro").hide();
-
-    $("#myComment")
-        .val(theReview.intro)
-        .keypress(queueSaveDraft);
 
     var numReviewers = 0;
     for (i = 0; i < theBug.comments.length; i++) {
@@ -491,6 +472,29 @@ function start(xml) {
 
         }
     }
+
+    // We load the saved draft or create a new reeview *after* inserting the existing reviews
+    // so that the ordering comes out right.
+
+    if (reviewStorage) {
+        theReview = reviewStorage.loadDraft(theBug, theAttachment, thePatch);
+        if (theReview) {
+            var storedReviews = reviewStorage.listReviews();
+            $("#restored").show();
+            for (i = 0; i < storedReviews.length; i++) {
+                if (storedReviews[i].bugId == theBug.id &&
+                    storedReviews[i].attachmentId == theAttachment.id)
+                    $("#restoredLastModified").text(Utils.formatDate(new Date(storedReviews[i].modificationTime)));
+            }
+        }
+    }
+
+    if (!theReview)
+        theReview = new Review.Review(thePatch);
+
+    $("#myComment")
+        .val(theReview.intro)
+        .keypress(queueSaveDraft);
 
     for (i = 0; i < thePatch.files.length; i++)
         addPatchFile(thePatch.files[i]);
