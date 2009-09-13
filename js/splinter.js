@@ -410,8 +410,20 @@ function addPatchFile(file) {
 var REVIEW_RE = /^\s*review\s+of\s+attachment\s+(\d+)\s*:\s*/i;
 
 function start(xml) {
-    if (reviewStorage)
+    var i;
+
+    if (reviewStorage) {
         theReview = reviewStorage.loadDraft(theBug, theAttachment, thePatch);
+        if (theReview) {
+            var storedReviews = reviewStorage.listReviews();
+            $("#restored").show();
+            for (i = 0; i < storedReviews.length; i++) {
+                if (storedReviews[i].bugId == theBug.id &&
+                    storedReviews[i].attachmentId == theAttachment.id)
+                    $("#restoredLastModified").text(Utils.formatDate(new Date(storedReviews[i].modificationTime)));
+            }
+        }
+    }
     if (!theReview)
         theReview = new Review.Review(thePatch);
 
@@ -431,8 +443,6 @@ function start(xml) {
         $("#attachmentStatus").val(theAttachment.status);
     else
         $("#attachmentStatusSpan").hide();
-
-    var i;
 
     for (i = 0; i < configAttachmentStatuses.length; i++) {
         $("<option></option")
