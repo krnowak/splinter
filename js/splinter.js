@@ -99,9 +99,9 @@ function publishReview() {
     }
 
     function success() {
-        alert("Succesfully published the review.");
         if (reviewStorage)
             reviewStorage.draftPublished(theBug, theAttachment);
+        document.location = newPageUrl(theBug.id);
     }
 
     addComment(theBug, comment,
