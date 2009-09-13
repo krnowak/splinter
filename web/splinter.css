@@ -156,9 +156,22 @@ body {
 }
 
 .hunk-header {
-    color: red;
     border: 1px solid black;
     background: #dddddd;
+}
+
+.hunk-cell {
+    padding: 2px;
+}
+
+.hunk-lines {
+    color: red;
+    float: left;
+}
+
+.hunk-function-line {
+    float: left;
+    margin-left: 2em;
 }
 
 .old-line, .new-line {

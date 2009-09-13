@@ -45,12 +45,12 @@ const CHANGED       = 1 << 2; // Part of some other segmnet
 const NEW_NONEWLINE = 1 << 3; // Old line doesn't end with \n
 const OLD_NONEWLINE = 1 << 4; // New line doesn't end with \n
 
-function Hunk(oldStart, oldCount, newStart, newCount, text) {
-    this._init(oldStart, oldCount, newStart, newCount, text);
+function Hunk(oldStart, oldCount, newStart, newCount, functionLine, text) {
+    this._init(oldStart, oldCount, newStart, newCount, functionLine, text);
 }
 
 Hunk.prototype = {
-    _init : function(oldStart, oldCount, newStart, newCount, text) {
+    _init : function(oldStart, oldCount, newStart, newCount, functionLine, text) {
         var rawlines = text.split("\n");
         if (rawlines.length > 0 && Utils.strip(rawlines[rawlines.length - 1]) == "")
             rawlines.pop(); // Remove trailing element from final \n
@@ -59,6 +59,7 @@ Hunk.prototype = {
         this.oldCount = oldCount;
         this.newStart = newStart;
         this.newCount = newCount;
+        this.functionLine = Utils.strip(functionLine);
         this.comment = null;
 
         var lines = [];
@@ -243,7 +244,7 @@ const FILE_START_RE = /^(?:(?:Index|index|===|RCS|diff).*\n)*---[ \t]*(\S+).*\n\
 
 // Hunk start: @@ -23,12 +30,11 @@
 // Followed by: lines beginning with [ +\-]
-const HUNK_RE = /^@@[ \t]+-(\d+),(\d+)[ \t]+\+(\d+),(\d+)[ \t]+@@.*\n((?:[ +\\-].*\n)*)/mg;
+const HUNK_RE = /^@@[ \t]+-(\d+),(\d+)[ \t]+\+(\d+),(\d+)[ \t]+@@(.*)\n((?:[ +\\-].*\n)*)/mg;
 
 function Patch(text) {
     this._init(text);
@@ -286,8 +287,7 @@ Patch.prototype = {
                 var newStart = parseInt(m2[3]);
                 var newCount = parseInt(m2[4]);
 
-                var hunk = new Hunk(oldStart, oldCount, newStart, newCount, m2[5]);
-                hunks.push(new Hunk(oldStart, oldCount, newStart, newCount, m2[5]));
+                hunks.push(new Hunk(oldStart, oldCount, newStart, newCount, m2[5], m2[6]));
             }
 
             this.files.push(new File(filename, hunks));

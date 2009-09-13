@@ -343,8 +343,11 @@ function addPatchFile(file) {
         var hunk = file.hunks[i];
         var hunkHeader = EL("tr", "hunk-header");
         tbody.appendChild(hunkHeader);
-        var hunkCell = EL("td", "hunk-cell",
-                          "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1));
+        var hunkCell = EL("td", "hunk-cell");
+        hunkCell.appendChild(EL("div", "hunk-lines",
+                                "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1)));
+        if (hunk.functionLine)
+            hunkCell.appendChild(EL("div", "hunk-function-line", hunk.functionLine));
         hunkCell.colSpan = 3;
         hunkHeader.appendChild(hunkCell);
 
