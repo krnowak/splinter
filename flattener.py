@@ -67,25 +67,25 @@ class Flattener(object):
                 module_name = m.group(1)
                 if not module_name in self.flattened_modules:
                     self.flattened_modules.add(module_name)
-                    print "var %s = {};" % module_name
+                    print >>self.outf, "var %s = {};" % module_name
                     self.flatten(moduleToFilename(module_name), module_name)
             elif m.group(2) is not None:
                 if namespace is None:
-                    print "function %s%s" % (m.group(2), m.group(3))
+                    print >>self.outf, "function %s%s" % (m.group(2), m.group(3))
                 else:
                     add_local(m.group(2))
-                    print "%s.%s = function%s;" % (namespace, m.group(2), substitute_locals(m.group(3)))
+                    print >>self.outf, "%s.%s = function%s;" % (namespace, m.group(2), substitute_locals(m.group(3)))
             elif m.group(4) is not None:
                 if namespace is None:
-                    print "%s.%s = %s" % (m.group(4), m.group(5), m.group(6))
+                    print >>self.outf, "%s.%s = %s" % (m.group(4), m.group(5), m.group(6))
                 else:
-                    print "%s.%s.%s = %s" % (namespace, m.group(4), m.group(5), substitute_locals(m.group(6)))
+                    print >>self.outf, "%s.%s.%s = %s" % (namespace, m.group(4), m.group(5), substitute_locals(m.group(6)))
             elif m.group(7) is not None:
                 if namespace is None:
-                    print "var %s%s" % (m.group(7), m.group(8))
+                    print >>self.outf, "var %s%s" % (m.group(7), m.group(8))
                 else:
                     add_local(m.group(7))
-                    print "%s.%s%s" % (namespace, m.group(7), substitute_locals(m.group(8)))
+                    print >>self.outf, "%s.%s%s" % (namespace, m.group(7), substitute_locals(m.group(8)))
 
             last_end = m.end()
 
@@ -94,7 +94,6 @@ class Flattener(object):
             error(last_end)
 
 if __name__ == '__main__':
-    flattener = Flattener(sys.stderr)
+    flattener = Flattener(sys.stdout)
     for filename in sys.argv[1:]:
-        flattener.flatten(
-            filename)
+        flattener.flatten(filename)
