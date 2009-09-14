@@ -1,0 +1,57 @@
+About
+=====
+
+Splinter is a light-weight addition to Bugzilla that allows a patch
+reviewer to view a nicely formatted version of a patch in their
+web browser and add comments on particular sections.
+
+Subsequent reviewers or the original patch author can then view the
+comments inline in the Splinter display of the patch.
+
+Reviews are saved to the bug as specially formatted comments that
+combine small amounts of unified-diff like output with the review
+comments. The output is designed to be both machine-parseable and
+also meaningful to someone who is viewing it straight without using
+Splinter.
+
+Splinter is written as a Javascript front end on top of existing
+HTML interfaces exported by Bugzilla. All the work of parsing patches,
+formatting them, etc, is done in Javascript.
+
+Installation
+============
+
+You can run Splinter locally for yourself with the splinter_proxy.py
+tool - see proxy/README for installation.
+
+The basic idea of a hosted install is to install Splinter onto the
+same server as as Bugzilla. Set up aliases or mod_rewrite so that
+/review/ is mapped onto the web/ directory of the location you
+installed Splinter.
+
+There will eventually be a small Bugzilla extension to add links from
+review comments and from the attachments list to the Splinter 
+review page.
+
+Why the name
+============
+
+The name "Splinter" has two connotations - first it suggests the
+process of taking a big patch and breaking it apart and commenting on
+individual sections. Secondly, its a bit of a homage to Review Board
+(http://www.review-board.org/). Seeing the screenshots I wanted
+something like that, but without disrupting my existing workflow of
+attaching patches to Bugzilla bugs and marking review status there.
+So, Splinter is "the smallest thing possible that gives an effect
+something like Review Board" - a splinter of a board.
+
+License
+=======
+
+By Owen Taylor <otaylor@fishsoup.net>
+
+Copyright 2009, Red Hat, Inc.
+
+Licensed either under the terms of the Mozilla Public License, version
+1.1 or later, or under the GNU General Public License, version 2 or
+later.
