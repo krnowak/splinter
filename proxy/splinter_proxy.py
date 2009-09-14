@@ -130,7 +130,7 @@ class ProxyHandler(SimpleHTTPRequestHandler):
                 content_length = long(value)
             # httplib.py will send an appropriate Host: header, we'll send
             # the cookies for our "session" with Bugzilla ourselves
-            if not header.lower() in ('cookie', 'host'):
+            if not header.lower() in ('cookie', 'host', 'x-forwarded-host', 'x-forwarded-server'):
                 connection.putheader(header, value)
         if login_cookie_header is not None:
             connection.putheader('Cookie', login_cookie_header)
@@ -189,7 +189,7 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             # We additionally exclude content-length since it would
             # be referring to the data sent with an original POST and
             # we're not sending that data with the redirected GET
-            if not header.lower() in ('cookie', 'host', 'content-length'):
+            if not header.lower() in ('cookie', 'host',  'x-forwarded-host', 'x-forwarded-server', 'content-length'):
                 connection.putheader(header, value)
         if login_cookie_header is not None:
             connection.putheader('Cookie', login_cookie_header)
