@@ -41,23 +41,34 @@ start_time = time.time()
 # Content for config.js
 config_js_content = None
 
+def port_from_scheme(scheme, override):
+    if scheme =='http':
+        if override:
+            return override
+        else:
+            return 80
+    elif scheme =='https':
+        if override:
+            return override
+        else:
+            return 443
+    else:
+        raise RuntimeError("Bad scheme %s" % scheme)
+
 # Convert an URL we received from a client to all the information we'll
 # need to proxy to the Bugzilla server - host, port, new path, etc.
 def get_proxy_info(path):
     split = urlparse.urlsplit(current_config['bugzilla_url'])
-    port = split.port
-    portstr = ":" + str(port) if port else ""
-    if split.scheme =='http':
-        port = port if port else 80
-    elif split.scheme =='https':
-        port = port if port else 443
+    if split.port:
+        portstr = ":" + str(split.port)
     else:
-        raise RuntimeError("Bad scheme %s" % split.scheme)
+        portstr = ""
+    port = port_from_scheme(split.scheme, split.port)
 
     url = "%s://%s%s%s" % (split.scheme, split.hostname,
                            portstr, split.path + path)
 
-    return split.scheme, split.hostname, split.port, split.path + path, url
+    return split.scheme, split.hostname, port, split.path + path, url
 
 # Without the mixin, HTTPServer is single-connection-at-a-time
 class ProxyServer(HTTPServer, ForkingMixIn):
@@ -143,20 +154,12 @@ class ProxyHandler(SimpleHTTPRequestHandler):
     def do_redirect(self, location, seen_urls):
         self.log_message("Redirecting to %s", location)
         split = urlparse.urlsplit(location)
+        port = port_from_scheme(split.scheme, split.port)
+
         if (split.scheme == 'http'):
             connection = httplib.HTTPConnection(split.hostname, split.port)
         else:
             connection = httplib.HTTPSConnection(split.hostname, split.port)
-
-        split = urlparse.urlsplit(location)
-        port = split.port
-        portstr = ":" + str(port) if port else ""
-        if split.scheme =='http':
-            port = port if port else 80
-        elif split.scheme =='https':
-            port = port if port else 443
-        else:
-            raise RuntimeError("Bad scheme %s" % split.scheme)
 
         relative = urlparse.urlunsplit((None, None, split.path, split.query, split.fragment))
         connection.putrequest('GET', relative)
