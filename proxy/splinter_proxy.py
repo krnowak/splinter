@@ -98,15 +98,20 @@ class ProxyHandler(SimpleHTTPRequestHandler):
     # normally but from do_redirect() if there was a redirect
     def relay_response(self, response):
         self.send_response(response.status, response.reason)
+        content = response.read()
         for header, value in response.getheaders():
             # BaseHTTPRequestHandler sends the 'Server' and 'Date' headers
             # We are handling the "session" with Bugzilla ourselves, so we
             # don't want the browser getting Bugzilla's cookies
-            if header.lower() in ('date', 'server', 'set-cookie'):
+            #
+            # Remove Transfer-Encoding since we end up converting chunked
+            # Transfer-Encoding to unchunked.
+            if header.lower() in ('date', 'server', 'set-cookie', 'transfer-encoding', 'content-length'):
                 continue
             self.send_header(header, value)
+        self.send_header('content-length', len(content))
         self.end_headers()
-        self.wfile.write(response.read())
+        self.wfile.write(content)
         self.wfile.close()
 
     def do_proxied(self):
