@@ -176,6 +176,19 @@ class ProxyHandler(SimpleHTTPRequestHandler):
 
         connection.close()
 
+    # Copy of date_time_string() in the Python-2.6 BaseHttpRequestHandler
+    # Differs from the the Python-2.4 version in taking an optional time to format.
+    def date_time_string(self, timestamp=None):
+        """Return the current date and time formatted for a message header."""
+        if timestamp is None:
+            timestamp = time.time()
+        year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
+        s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
+                self.weekdayname[wd],
+                day, self.monthname[month], year,
+                hh, mm, ss)
+        return s
+
     def do_config_js(self):
         self.send_response(200, "OK")
         self.send_header("Content-type", "text/javascript")
