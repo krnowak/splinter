@@ -41,6 +41,23 @@ start_time = time.time()
 # Content for config.js
 config_js_content = None
 
+# This wraps up the pure-tuple old SplitResult into an object with attributes
+# like the new version
+class CompatSplitResult:
+    def __init__(self, *args):
+        (self.scheme, self.netloc, self.path, self.query, self.fragment) = args
+        colon = self.netloc.find(':')
+        if colon >= 0:
+            self.hostname = self.netloc[0:colon]
+            self.port = self.netloc[colon + 1:]
+        else:
+            self.hostname = self.netloc
+            self.port = None
+
+def urlsplit(url):
+    tuple = urlparse.urlsplit(url)
+    return CompatSplitResult(*tuple)
+
 def port_from_scheme(scheme, override):
     if scheme =='http':
         if override:
@@ -58,7 +75,7 @@ def port_from_scheme(scheme, override):
 # Convert an URL we received from a client to all the information we'll
 # need to proxy to the Bugzilla server - host, port, new path, etc.
 def get_proxy_info(path):
-    split = urlparse.urlsplit(current_config['bugzilla_url'])
+    split = urlsplit(current_config['bugzilla_url'])
     if split.port:
         portstr = ":" + str(split.port)
     else:
@@ -153,7 +170,7 @@ class ProxyHandler(SimpleHTTPRequestHandler):
     # Retry the request with a GET after a redirect
     def do_redirect(self, location, seen_urls):
         self.log_message("Redirecting to %s", location)
-        split = urlparse.urlsplit(location)
+        split = urlsplit(location)
         port = port_from_scheme(split.scheme, split.port)
 
         if (split.scheme == 'http'):
