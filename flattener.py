@@ -33,6 +33,20 @@ class Flattener(object):
         self.outf = outf
         self.flattened_modules = set()
 
+    def output_prologue(self):
+        self.outf.write("""\
+// Splinter - patch review add-on for Bugzilla
+// By Owen Taylor <otaylor@fishsoup.net>
+// Copyright 2009, Red Hat, Inc.
+// Licensed under MPL 1.1 or later, or GPL 2 or later
+// http://git.fishsoup.net/cgit/splinter
+
+if (!console) {
+    var console = {};
+    console.log = function() {};
+}
+""");
+
     def flatten(self, filename, namespace=None):
         locals = {}
         f = open(filename)
@@ -95,5 +109,6 @@ class Flattener(object):
 
 if __name__ == '__main__':
     flattener = Flattener(sys.stdout)
+    flattener.output_prologue()
     for filename in sys.argv[1:]:
         flattener.flatten(filename)

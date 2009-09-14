@@ -395,6 +395,15 @@ int main(int argc, const char *argv[])
         if (!JS_DefineFunctions(cx, global, global_functions))
             return 1;
 
+        /* For quick-and-dirty compat with Firebug, the 'console' property
+         * points back to the global object which has 'log'
+         */
+
+        if (!JS_DefineProperty(cx, global, "console",
+                               OBJECT_TO_JSVAL(global), NULL, NULL,
+                               JSPROP_PERMANENT | JSPROP_READONLY))
+            return FALSE;
+
         if (!g_file_get_contents(argv[i], &src, &length, &error)) {
             g_printerr("%s\n", error->message);
             return 1;
