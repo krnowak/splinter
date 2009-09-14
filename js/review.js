@@ -356,7 +356,10 @@ Review.prototype = {
                         count += parseInt(m3[1]);
                         i += 1;
                     }
-                    if (line.match(/^ /)) {
+                    console.log(line.length);
+                    // The check for /^$/ is because if Bugzilla is line-wrapping it also
+                    // strips completely whitespace lines
+                    if (line.match(/^ /) || line.match(/^$/)) {
                         oldLine += count;
                         newLine += count;
                         lastSegmentOld = 0;
@@ -370,7 +373,9 @@ Review.prototype = {
                     } else if (line.match(/^\\/)) {
                         // '\ No newline at end of file' - ignore
                     } else {
-                        throw "Bad content in hunk: " + line;
+                        // Ignore assumming it's a result of line-wrapping
+                        // https://bugzilla.mozilla.org/show_bug.cgi?id=509152
+                        console.log("WARNING: Bad content in hunk: " + line);
                     }
 
                     if ((oldStart == null || oldLine == oldStart + oldCount) &&
@@ -380,8 +385,10 @@ Review.prototype = {
                     }
                 }
 
-                if (commentText == null)
-                    throw "No comment found in hunk";
+                if (commentText == null) {
+                    console.log("WARNING: No comment found in hunk");
+                    commentText = "";
+                }
 
 
                 var location;
