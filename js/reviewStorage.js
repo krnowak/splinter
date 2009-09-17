@@ -22,7 +22,7 @@ function LocalReviewStorage() {
 }
 
 LocalReviewStorage.available = function() {
-    return 'localStorage' in window;
+    return 'localStorage' in window && window.localStorage != null;
 };
 
 LocalReviewStorage.prototype = {
