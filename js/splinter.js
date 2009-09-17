@@ -427,16 +427,17 @@ function start(xml) {
     $("#attachmentId").text(theAttachment.id);
     $("#attachmentDesc").text(theAttachment.description);
     $("#attachmentDate").text(Utils.formatDate(theAttachment.date));
-    if (theAttachment.status != null)
-        $("#attachmentStatus").val(theAttachment.status);
-    else
-        $("#attachmentStatusSpan").hide();
 
     for (i = 0; i < configAttachmentStatuses.length; i++) {
         $("<option></option")
             .text(configAttachmentStatuses[i])
             .appendTo($("#attachmentStatus"));
     }
+
+    if (theAttachment.status != null)
+        $("#attachmentStatus").val(theAttachment.status);
+    else
+        $("#attachmentStatusSpan").hide();
 
     if (thePatch.intro)
         $("#patchIntro").text(thePatch.intro);
