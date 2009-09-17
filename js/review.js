@@ -356,7 +356,6 @@ Review.prototype = {
                         count += parseInt(m3[1]);
                         i += 1;
                     }
-                    console.log(line.length);
                     // The check for /^$/ is because if Bugzilla is line-wrapping it also
                     // strips completely whitespace lines
                     if (line.match(/^ /) || line.match(/^$/)) {
