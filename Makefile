@@ -9,6 +9,7 @@ jstest: jstest.o
 
 JS_FILES =					\
 	js/bug.js				\
+	js/bugFromText.js			\
 	js/patch.js				\
 	js/review.js				\
 	js/reviewStorage.js			\

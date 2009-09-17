@@ -113,60 +113,6 @@ Bug.prototype = {
     }
 };
 
-// DOM is not available in the non-Browser environment we use for test cases
-// So we use E4X, which is supported by Spidermonkey. It's not supported
-// by most browsers.
-Bug.fromText = function(bugText) {
-    var bug = new Bug();
-
-    // We need to skip the XML and DOCTYPE declarations that E4X doesn't handle
-    var xmlstart = bugtext.indexOf("<bugzilla");
-    var bugzillaNode = new XML(bugtext.substring(xmlstart));
-    var bugNode = bugzillaNode.bug;
-
-    bug.id = parseInt(bugNode.bug_id);
-    bug.token = bugNode.token;
-    bug.shortDesc = Utils.strip(bugNode.short_desc);
-    bug.creationDate = parseDate(bugNode.creation_ts);
-    bug.reporterName = Utils.strip(bugNode.reporter).@name;
-    bug.reporterEmail = Utils.strip(bugNode.reporter);
-    var longDescNodes = bugNode.long_desc;
-    for (var i = 0; i < longDescNodes.length(); i++) {
-        var longDescNode = longDescNodes[i];
-        var comment = new Comment(bug);
-
-        comment.whoName = Utils.strip(longDescNode.who.@name);
-        comment.whoEmail = Utils.strip(longDescNode.who);
-        comment.date = parseDate(longDescNode.bug_when);
-        comment.text = longDescNode.thetext;
-
-        bug.comments.push(comment);
-    }
-
-    var attachmentNodes = bugNode.attachment;
-    for (var i = 0; i < attachmentNodes.length(); i++) {
-        var attachmentNode = attachmentNodes[i];
-        var attachid = parseInt(attachmentNode.attachid);
-        var attachment = new Attachment(bug, attachid);
-
-        attachment.description = Utils.strip(attachmentNode.desc);
-        attachment.filename = Utils.strip(attachmentNode.filename);
-        attachment.date = parseDate(attachmentNode.date);
-        attachment.status = Utils.strip(attachmentNode.status);
-        if (attachment.status == "")
-            attachment.status = null;
-        attachment.token = Utils.strip(attachmentNode.token);
-        if (attachment.token == "")
-            attachment.token = null;
-        attachment.isPatch = attachmentNode.@ispatch == "1";
-        attachment.isObsolete = attachmentNode.@isobsolete == "1";
-        attachment.isPrivate = attachmentNode.@isprivate == "1";
-
-        bug.attachments.push(attachment);
-    }
-    return bug;
-};
-
 // In the browser environment we use JQuery to parse the DOM tree
 // for the XML document for the bug
 Bug.fromDOM = function(xml) {

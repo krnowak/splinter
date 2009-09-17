@@ -1,5 +1,6 @@
 /* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
 include('Bug');
+include('BugFromText');
 include('TestUtils');
 include('Utils');
 
@@ -20,7 +21,7 @@ assertDateEquals(new Date('Sat Aug 29, 2009 14:03:00 UTC'),
                  Bug.parseDate('2009-08-29 10:03:00 -0400'));
 
 let bugtext = load('testbugs/561745/bug.xml');
-let bug_561745 = Bug.Bug.fromText(bugtext);
+let bug_561745 = BugFromText.bugFromText(bugtext);
 
 // This test is mostly testing the E4X parser which is different from the DOM/JQuery parser
 // we use on the web page.
