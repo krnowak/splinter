@@ -17,6 +17,8 @@ var saveDraftTimeoutId;
 var saveDraftNoticeTimeoutId;
 var savingDraft = false;
 
+var currentEditComment;
+
 const ADD_COMMENT_SUCCESS = /<title>\s*Bug[\S\s]*processed\s*<\/title>/;
 const UPDATE_ATTACHMENT_SUCCESS = /<title>\s*Changes\s+Submitted/;
 
@@ -89,6 +91,7 @@ function addComment(bug, comment, success, failure) {
 }
 
 function publishReview() {
+    saveComment();
     theReview.setIntro($("#myComment").val());
 
     var comment = "Review of attachment " + attachmentId + ":\n\n" + theReview;
@@ -126,8 +129,6 @@ function hideSaveDraftNotice() {
 }
 
 function saveDraft() {
-    theReview.setIntro($("#myComment").val());
-
     if (reviewStorage == null)
         return;
 
@@ -141,7 +142,23 @@ function saveDraft() {
     clearTimeout(saveDraftNoticeTimeoutId);
     setTimeout(hideSaveDraftNotice, 3000);
 
+    if (currentEditComment) {
+        currentEditComment.comment = Utils.strip($("#commentEditor textarea").val());
+        // Messy, we don't want the empty comment in the saved draft, so remove it and
+        // then add it back.
+        if (!currentEditComment.comment)
+            currentEditComment.remove();
+    }
+
+    theReview.setIntro($("#myComment").val());
+
     reviewStorage.saveDraft(theBug, theAttachment, theReview);
+
+    if (currentEditComment && !currentEditComment.comment) {
+        currentEditComment = currentEditComment.file.addComment(currentEditComment.location,
+                                                                currentEditComment.type,
+                                                                "");
+    }
 
     savingDraft = false;
     $("#saveDraftNotice")
@@ -215,8 +232,7 @@ function getReviewerClass(review) {
     return "reviewer-" + reviewerIndex;
 }
 
-function addCommentDisplay(row, comment) {
-    var commentArea = ensureCommentArea(row);
+function addCommentDisplay(commentArea, comment) {
     var review = comment.file.review;
 
     var separatorClass = getSeparatorClass(comment.type);
@@ -238,7 +254,9 @@ function addCommentDisplay(row, comment) {
         .addClass(getReviewerClass(review))
         .appendTo(commentArea)
         .dblclick(function() {
-                      insertCommentEditor(row, comment.type);
+                      saveComment();
+                      insertCommentEditor(commentArea,
+                                          comment.file.patchFile, comment.location, comment.type);
                   });
 
     if (review != theReview) {
@@ -252,34 +270,113 @@ function addCommentDisplay(row, comment) {
     }
 }
 
-function saveComment(row, file, location, type) {
-    var commentArea = ensureCommentArea(row);
-    var reviewFile = theReview.getFile(file.filename);
-    var comment = reviewFile.getComment(location, type);
+function saveComment() {
+    var comment = currentEditComment;
+    if (!comment)
+        return;
 
-    var value = Utils.strip($(commentArea).find("textarea").val());
+    var commentEditor = $("#commentEditor").get(0);
+    var commentArea = commentEditor.parentNode;
+    var reviewFile = comment.file;
+
+    var hunk = comment.getHunk();
+    var line = hunk.lines[comment.location - hunk.location];
+
+    var value = Utils.strip($(commentEditor).find("textarea").val());
     if (value != "") {
-        if (comment)
-            comment.comment = value;
-        else
-            comment = reviewFile.addComment(location, type, value);
-
-        addCommentDisplay(row, comment);
+        comment.comment = value;
+        addCommentDisplay(commentArea, comment);
     } else {
-        if (comment)
-            comment.remove();
+        comment.remove();
     }
 
-    if (reviewFile.comments.length == 0) {
+    if (line.reviewComments.length > 0) {
+        $("#commentEditor").remove();
+        $("#commentEditorSeparator").remove();
+    } else {
         $(commentArea).parent().remove();
-    } else {
-        $(commentArea).find(".comment-editor").remove();
     }
 
+    currentEditComment = null;
     saveDraft();
 }
 
-function insertCommentEditor(clickRow, clickType) {
+function cancelComment(previousText) {
+    $("#commentEditor textarea").val(previousText);
+    saveComment();
+}
+
+function deleteComment() {
+    $("#commentEditor textarea").val("");
+    saveComment();
+}
+
+function insertCommentEditor(commentArea, file, location, type) {
+    saveComment();
+
+    var reviewFile = theReview.getFile(file.filename);
+    var comment = reviewFile.getComment(location, type);
+    if (!comment)
+        comment = reviewFile.addComment(location, type, "");
+
+    var previousText = comment.comment;
+
+    var typeClass = getTypeClass(type);
+    var separatorClass = getSeparatorClass(type);
+
+    if (separatorClass)
+        $(commentArea).find(".reviewer-0." + separatorClass).remove();
+    $(commentArea).find(".reviewer-0." + typeClass).remove();
+
+    if (separatorClass)
+        $("<div class='commentEditorSeparator'></div>")
+            .addClass(separatorClass)
+            .appendTo(commentArea);
+    $("<div id='commentEditor'>"
+      + "<div id='commentEditorInner'>"
+      + "<div id='commentTextFrame'>"
+      + "<textarea></textarea>"
+      + "</div>"
+      + "<div id='commentEditorLeftButtons'>"
+      + "<input id='commentCancel' type='button' value='Cancel' />"
+      + "</div>"
+      + "<div id='commentEditorRightButtons'>"
+      + "<input id='commentSave' type='button'value='Save' />"
+      + "</div>"
+      + "<div class='clear'></div>"
+      + "</div>"
+      + "</div>")
+        .addClass(typeClass)
+        .find("#commentSave").click(saveComment).end()
+        .find("#commentCancel").click(function() {
+                                          cancelComment(previousText);
+                                      }).end()
+        .appendTo(commentArea)
+        .find('textarea')
+            .val(previousText)
+            .keypress(function(e) {
+                          if (e.which == 13 && e.ctrlKey)
+                              saveComment();
+                          else
+                              queueSaveDraft();
+                      })
+            .focus(function() {
+                       $("#commentEditor").addClass('focused');
+                   })
+            .blur(function() {
+                      $("#commentEditor").removeClass('focused');
+                  })
+            .each(function() { this.focus(); });
+
+    if (previousText)
+        $("<input id='commentDelete' type='button' value='Delete' />")
+            .click(deleteComment)
+            .appendTo($("#commentEditorLeftButtons"));
+
+    currentEditComment = comment;
+}
+
+function insertCommentForRow(clickRow, clickType) {
     var file = $(clickRow).data('patchFile');
     var clickLocation = $(clickRow).data('patchLocation');
 
@@ -287,33 +384,9 @@ function insertCommentEditor(clickRow, clickType) {
     var location = clickLocation;
     var type = clickType;
 
-    var reviewFile = theReview.getFile(file.filename);
-    var comment = reviewFile.getComment(location, type);
-
+    saveComment();
     var commentArea = ensureCommentArea(row);
-
-    var typeClass = getTypeClass(type);
-    var separatorClass = getSeparatorClass(type);
-
-    if (comment) {
-        if (separatorClass)
-            $(commentArea).find(".reviewer-0." + separatorClass).remove();
-        $(commentArea).find(".reviewer-0." + typeClass).remove();
-    }
-
-    if (separatorClass)
-        $("<div class='comment-editor'></div>")
-            .addClass(separatorClass)
-            .appendTo(commentArea);
-    $("<div class='comment-editor'><textarea></textarea></div>")
-        .addClass(typeClass)
-        .appendTo(commentArea)
-        .find('textarea')
-            .val(comment ? comment.comment : "")
-            .blur(function() {
-                      saveComment(row, file, location, type);
-                  })
-            .each(function() { this.focus(); });
+    insertCommentEditor(commentArea, file, location, type);
 }
 
 function EL(element, cls, text) {
@@ -398,14 +471,16 @@ function addPatchFile(file) {
                                                 type = Patch.CHANGED;
                                             else
                                                 type = Patch.ADDED;
-                                            insertCommentEditor(this, type);
+                                            insertCommentForRow(this, type);
                                         });
 
                          tbody.appendChild(tr);
 
                          if (line.reviewComments != null)
-                             for (var k = 0; k < line.reviewComments.length; k++)
-                                 addCommentDisplay(tr, line.reviewComments[k]);
+                             for (var k = 0; k < line.reviewComments.length; k++) {
+                                 var commentArea = ensureCommentArea(tr);
+                                 addCommentDisplay(commentArea, line.reviewComments[k]);
+                             }
                      });
     }
 }
