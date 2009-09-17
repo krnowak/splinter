@@ -23,8 +23,12 @@ Comment.prototype = {
         this.comment = comment;
     },
 
+    getHunk : function() {
+        return this.file.patchFile.getHunk(this.location);
+    },
+
     remove : function() {
-        var hunk = this.file.patchFile.getHunk(this.location);
+        var hunk = this.getHunk();
         var line = hunk.lines[this.location - hunk.location];
         _removeFromArray(this.file.comments, this);
         _removeFromArray(line.reviewComments, this);
@@ -106,7 +110,7 @@ File.prototype = {
             else
                 str += '\n';
             var comment = this.comments[i];
-            var hunk = this.patchFile.getHunk(comment.location);
+            var hunk = comment.getHunk();
 
             // Find the range of lines we might want to show. That's everything in the
             // same segment as the commented line, plus up two two lines of non-comment
