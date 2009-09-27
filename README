@@ -24,14 +24,20 @@ Installation
 You can run Splinter locally for yourself with the splinter_proxy.py
 tool - see proxy/README for installation.
 
-The basic idea of a hosted install is to install Splinter onto the
-same server as as Bugzilla. Set up aliases or mod_rewrite so that
-/review/ is mapped onto the web/ directory of the location you
-installed Splinter.
+To add it to a Bugzilla installation, simply run:
 
-There will eventually be a small Bugzilla extension to add links from
-review comments and from the attachments list to the Splinter 
-review page.
+ make install BUGZILLA_ROOT=/path/to/bugzilla/installation
+
+You'll need to do this as root or as another user with permissions
+to change ownership of files to the web server group.
+
+By default, Splinter will have the URL /page.cgi?id=splinter.html, which
+is ugly and leaks implementation details that may change. This URL can
+be changed from the "Splinter Patch Review" section of "Parameters" in
+the Bugzilla Adminstration pages. If you change it (the recommendation is
+to use /review), you'll have to use mod_rewrite or other web server
+configuration to forward the pretty URL to the right place. The
+parameter description includes instructions for mod_rewrite.
 
 Why the name
 ============
@@ -52,6 +58,11 @@ By Owen Taylor <otaylor@fishsoup.net>
 
 Copyright 2009, Red Hat, Inc.
 
-Licensed either under the terms of the Mozilla Public License, version
-1.1 or later, or under the GNU General Public License, version 2 or
-later.
+All of Splinter other than the extension/ directory is licensed either
+under the terms of the Mozilla Public License, version 1.1 or later,
+or under the GNU General Public License, version 2 or later.
+
+The code and content in the extension/ directory contains code derived
+from the Bugzilla Example Plugin and Bugzilla and is Copyright 2009,
+Red Hat Inc. and others, and licensed under the terms of the
+Mozilla Public License, version 1.1 or later.

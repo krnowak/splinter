@@ -494,14 +494,13 @@ function start(xml) {
 
     $("#loading").hide();
     $("#attachmentInfo").show();
-    $("#controls").show();
+    $("#intro").show();
     $("#files").show();
 
     $("#bugLink").attr('href', newPageUrl(theBug.id));
 
-    $("#attachmentId").text(theAttachment.id);
-    $("#attachmentDesc").text(theAttachment.description);
-    $("#attachmentDate").text(Utils.formatDate(theAttachment.date));
+    $("#subtitle").text("Attachment " + theAttachment.id + " - " + theAttachment.description);
+    $("#information").text(Utils.formatDate(theAttachment.date));
 
     for (i = 0; i < configAttachmentStatuses.length; i++) {
         $("<option></option")
@@ -584,7 +583,7 @@ function start(xml) {
 function gotBug(xml) {
     theBug = Bug.Bug.fromDOM(xml);
 
-    $("#headers").show();
+    $("#bugInfo").show();
     showNote();
 
     $("#bugId").text(theBug.id);
@@ -619,9 +618,10 @@ function isDigits(str) {
 }
 
 function newPageUrl(newBugId, newAttachmentId) {
-    var newUrl = "/index.html";
+    var newUrl = configBase;
     if (newBugId != null) {
-        newUrl += "?bug=" + escape("" + newBugId);
+        newUrl += (newUrl.indexOf("?") < 0) ? "?" : "&";
+        newUrl += "bug=" + escape("" + newBugId);
         if (newAttachmentId != null)
             newUrl += "&attachment=" + escape("" + newAttachmentId);
     }

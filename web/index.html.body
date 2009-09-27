@@ -1,0 +1,53 @@
+<div id="error" style="display: none;"> </div>
+<div id="loading">Loading....</div>
+<div id="bugInfo" style="display: none;">
+  <a id="bugLink">Bug <span id="bugId"></span></a> -
+  <span id="bugShortDesc"></span> -
+  <span id="bugReporter"></span> -
+  <span id="bugCreationDate"></span>
+</div>
+<div id="enterBug" style="display: none;">
+  Bug to review:
+  <input id="enterBugInput" />
+  <input id="enterBugGo" type="button" value="Go" />
+  <div id="chooseReview" style="display: none;">
+     Drafts and published reviews:
+    <table>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div id="chooseAttachment" style="display: none;">
+  Choose patch attachment to review:
+  <table>
+    <tbody>
+    </tbody>
+  </table>
+  <a id="originalBugLink">Go to bug</a>
+</div>
+<div id="intro" style="display: none;">
+  <div id="patchIntro">
+  </div>
+  <div id="oldReviews">
+  </div>
+  <div id="restored" style="display: none;">
+    Restored from draft; last edited <span id="restoredLastModified"></span>
+  </div>
+  <div>
+    <div>Overall Comment:</div>
+    <textarea id="myComment"></textarea>
+    <div>
+    </div>
+    <div id="buttonBox">
+      <span id="attachmentStatusSpan">Patch Status:
+	<select id="attachmentStatus"> </select>
+      </span>
+      <input id="publishButton" type="button" value="Publish" />
+      <input id="cancelButton" type="button" value="Cancel" />
+    </div>
+    <div class="clear"></div>
+  </div>
+</div>
+<div id="files" style="display: none;"></div>
+<div id="saveDraftNotice" style="display: none;"></div>

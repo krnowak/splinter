@@ -2,6 +2,8 @@ jstest
 *.o
 *.pyc
 *~
+extension/template/en/default/pages/splinter.html.tmpl
 proxy/config.py
 web/config.js
+web/index.html
 web/splinter.flat.js

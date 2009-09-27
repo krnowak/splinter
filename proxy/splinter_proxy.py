@@ -354,24 +354,33 @@ def login():
         print >>sys.stderr, "Can't log in to %s: %s" % (current_config['bugzilla_url'],
                                                         e.args[1])
 
-def read_config_js():
-    try:
-        f = open("../web/config.js")
-    except IOError:
-        print >>sys.stderr, "web/config.js doesn't exist; you need to create it from config.js.example"
-        sys.exit(1)
-
-    content = f.read()
-    f.close()
-
-    content = content.replace('@@BUGZILLA_URL@@',  current_config['bugzilla_url'])
+def make_config_js():
     if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
         note = ''
     else:
         note = 'This is a read-only demo instance of Splinter; you will not be able to publish your reviews'
-    content = content.replace('@@NOTE@@',  note)
 
-    return content
+    # configAttachmentStatuses is just hardcoded here to the values for bugzilla.gnome.org
+    # which is the only Bugzilla instance I'm aware of using attachment statuses. It
+    # could be added to config.py if needed.
+    return """\
+configBugzillaUrl = '%(bugzilla_url)s';
+configNote = '%(note)s';
+
+configAttachmentStatuses = [
+    'none',
+    'accepted-commit_now',
+    'needs-work',
+    'accepted-commit_after_freeze',
+    'committed',
+    'rejected',
+    'reviewed'
+];
+""" % {
+        'bugzilla_url': current_config['bugzilla_url'],
+        'have_extension': have_extension_value,
+        'note': note
+      }
 
 def redirect_to_log(log_file):
     outf = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
@@ -447,7 +456,7 @@ if not config_name in config.configs:
 
 current_config = config.configs[config_name]
 
-config_js_content = read_config_js()
+config_js_content = make_config_js()
 
 if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
     if 'proxy_bind' in current_config and current_config['proxy_bind'] != '127.0.0.1':

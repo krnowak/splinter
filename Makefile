@@ -30,8 +30,72 @@ CLEAN_FILES =					\
 	jstest					\
 	web/splinter.flat.js
 
+WEB_FILES =					\
+	web/index.html				\
+	web/jquery.min.js			\
+	web/splinter.css			\
+	web/splinter.flat.js
+
+EXTENSION_FILES =							\
+	extension/code/bug-format_comment.pl				\
+	extension/code/config-add_panels.pl				\
+	extension/code/page-before_template.pl				\
+	extension/info.pl						\
+	extension/lib/ConfigSplinter.pm					\
+	extension/template/en/attachment/list-action.html.tmpl		\
+	extension/template/en/default/admin/params/splinter.html.tmpl	\
+	extension/template/en/default/pages/splinter.html.tmpl
+
 web/splinter.flat.js: $(JS_FILES) flattener.py
 	python flattener.py js/splinter.js > $@ || rm -f $@
+
+define SUBSTITUTE_BODY
+perl -ne 'BEGIN {				\
+    local $$/;					\
+    open F, "web/index.html.body";		\
+    $$body = <F>;				\
+    close(F);					\
+}						\
+						\
+if (/\@\@BODY\@\@/) {				\
+    print $$body;				\
+} else {					\
+    print;					\
+}'
+endef
+
+extension/template/en/default/pages/splinter.html.tmpl: extension/template/en/default/pages/splinter.html.tmpl.in web/index.html.body
+	$(SUBSTITUTE_BODY) $< > $@ || rm $@
+
+web/index.html: web/index.html.in web/index.html.body
+	$(SUBSTITUTE_BODY) $< > $@ || rm $@
+
+install: $(WEB_FILES) $(EXTENSION_FILES)
+	@BUGZILLA_ROOT="$(BUGZILLA_ROOT)";											\
+	BUGZILLA_ROOT=$${BUGZILLA_ROOT:-`git config splinter.bugzilla-root`} ;							\
+	[ "$$BUGZILLA_ROOT" = "" ] && echo >&2 "Usage: make install BUGZILLA_ROOT=<path to bugzilla>" && exit 1 ;		\
+	webservergroup=`sed -n '{ s/$$webservergroup *= *'[\'\"]'\(.*\)'[\'\"]' *; */\1/ p }' $$BUGZILLA_ROOT/localconfig` ;	\
+	[ "$$webservergroup" = "" ] && echo >&2 "Can't find webservergroup in $$BUGZILLA_ROOT/localconfig" && exit 1 ;		\
+	echo "Removing old install" ;												\
+	rm -rf $$BUGZILLA_ROOT/extensions/splinter ;										\
+	ensuredir() {														\
+		if [ -d `dirname $$1` ] ; then : ; else										\
+			ensuredir `dirname $$1` ;										\
+			install -g $$webservergroup -m 0750 -d `dirname $$1` || exit 1 ;					\
+		fi														\
+	} ;															\
+	installone() {														\
+		d=`dirname $$2` ;												\
+		echo "Installing $$1 => $$d" ;											\
+		ensuredir $$2 ;													\
+		install -g $$webservergroup -m 0640 $$1 $$2 || exit 1 ;								\
+	} ;															\
+	for i in $(EXTENSION_FILES) ; do											\
+		installone $$i $$BUGZILLA_ROOT/extensions/splinter/$${i#extension/} ;						\
+	done ;															\
+	for i in $(WEB_FILES) ; do												\
+		installone $$i $$BUGZILLA_ROOT/extensions/splinter/$$i ;							\
+	done
 
 check: jstest
 	./jstest $(TESTS)
