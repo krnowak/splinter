@@ -316,6 +316,11 @@ class LoginTransport(xmlrpclib.Transport):
         else:
             return LoginConnectionS(self.hostname, self.port)
 
+    def send_request(self, connection, handler, request_body):
+        xmlrpclib.Transport.send_request(self, connection, handler, request_body)
+        if login_cookie_header is not None:
+            connection.putheader('Cookie', login_cookie_header)
+
 class LoginConnection(httplib.HTTP):
     def getreply(self):
         errcode, errmsg, headers = httplib.HTTP.getreply(self)
@@ -331,10 +336,7 @@ class LoginConnectionS(httplib.HTTPS):
 # Try to log in; we log in once every time the proxy is started, and don't
 # try to remember our cookies. Cookies will be deleted from the server
 # after 30 days of non-use.
-def login():
-    proxy_scheme, proxy_hostname, proxy_port, proxy_path, proxy_url = get_proxy_info("/xmlrpc.cgi")
-    transport = LoginTransport(proxy_scheme, proxy_hostname, proxy_port)
-    xmlrpc = xmlrpclib.ServerProxy(proxy_url, transport)
+def login(xmlrpc):
     try:
         # 'remember: 0' basically just causes the server not to send an
         # Expires: parameter with the cookie, but it serves as a hint
@@ -354,19 +356,36 @@ def login():
         print >>sys.stderr, "Can't log in to %s: %s" % (current_config['bugzilla_url'],
                                                         e.args[1])
 
+def get_splinter_info(xmlrpc):
+    try:
+        return xmlrpc.Splinter.info()
+    except xmlrpclib.Fault, e:
+        # Probably simply no extension
+        pass
+    except xmlrpclib.ProtocolError, e:
+        print >>sys.stderr, "Can't get splinter extension info: %d %s" % (e.errcode,
+                                                                          e.errmsg)
+    except (socket.error, socket.herror, socket.gaierror), e:
+        print >>sys.stderr, "Can't get splinter extension info %s: %s" % (current_config['bugzilla_url'],
+                                                                          e.args[1])
+
+    return None
+
 def make_config_js():
     if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
         note = ''
     else:
         note = 'This is a read-only demo instance of Splinter; you will not be able to publish your reviews'
 
+    if have_extension:
+        have_extension_value = 'true';
+    else:
+        have_extension_value = 'false';
+
     # configAttachmentStatuses is just hardcoded here to the values for bugzilla.gnome.org
     # which is the only Bugzilla instance I'm aware of using attachment statuses. It
     # could be added to config.py if needed.
     return """\
-configBugzillaUrl = '%(bugzilla_url)s';
-configNote = '%(note)s';
-
 configAttachmentStatuses = [
     'none',
     'accepted-commit_now',
@@ -376,6 +395,11 @@ configAttachmentStatuses = [
     'rejected',
     'reviewed'
 ];
+
+configBase = 'index.html';
+configBugzillaUrl = '%(bugzilla_url)s';
+configHaveExtension = %(have_extension)s;
+configNote = '%(note)s';
 """ % {
         'bugzilla_url': current_config['bugzilla_url'],
         'have_extension': have_extension_value,
@@ -456,7 +480,9 @@ if not config_name in config.configs:
 
 current_config = config.configs[config_name]
 
-config_js_content = make_config_js()
+proxy_scheme, proxy_hostname, proxy_port, proxy_path, proxy_url = get_proxy_info("/xmlrpc.cgi")
+transport = LoginTransport(proxy_scheme, proxy_hostname, proxy_port)
+xmlrpc = xmlrpclib.ServerProxy(proxy_url, transport)
 
 if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
     if 'proxy_bind' in current_config and current_config['proxy_bind'] != '127.0.0.1':
@@ -465,10 +491,27 @@ if 'bugzilla_login' in current_config and 'bugzilla_login' in current_config:
         print >>sys.stderr, "proxy_bind is '%s' not '127.0.0.1" % current_config['proxy_bind']
         print >>sys.stderr, "Refusing to log in with private login/password"
     else:
-        login()
+        login(xmlrpc)
 
 if login_cookie_header is None:
     print >>sys.stderr, "Proxying to %s anonymously" % (current_config['bugzilla_url'])
+
+have_extension = False
+splinter_info = get_splinter_info(xmlrpc)
+if splinter_info:
+    extension_version = splinter_info['version']
+
+    if extension_version < 1:
+        print >>sys.stderr, "Too old splinter extension found"
+    else:
+        print >>sys.stderr, "Splinter extension found, version %d" % extension_version
+        have_extension = True
+        if splinter_info['logged_in']:
+            print "Login=%s, Name=%s" % (splinter_info['login'], splinter_info['name'])
+else:
+    print >>sys.stderr, "No Splinter extension found"
+
+config_js_content = make_config_js()
 
 proxy_bind = '127.0.0.1'
 proxy_port = 23080

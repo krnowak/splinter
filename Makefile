@@ -40,8 +40,10 @@ EXTENSION_FILES =							\
 	extension/code/bug-format_comment.pl				\
 	extension/code/config-add_panels.pl				\
 	extension/code/page-before_template.pl				\
+	extension/code/webservice.pl					\
 	extension/info.pl						\
 	extension/lib/ConfigSplinter.pm					\
+	extension/lib/WSSplinter.pm					\
 	extension/template/en/attachment/list-action.html.tmpl		\
 	extension/template/en/default/admin/params/splinter.html.tmpl	\
 	extension/template/en/default/pages/splinter.html.tmpl

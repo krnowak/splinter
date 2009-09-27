@@ -31,12 +31,15 @@
 <script type="text/javascript">
   configAttachmentStatuses = [
   [% FOREACH status = attachment_statuses %]
-  '[% status FILTER js %]',
+    '[% status FILTER js %]',
   [% END %]
   ];
-  configBugzillaUrl = '/';
+
   configBase = '[% Param('splinter_base') FILTER js %]';
   $(function() { init(); });
+  configBugzillaUrl = '/';
+  configHaveExtension = true;
+  configNote = '';
 </script>
 
 @@BODY@@
