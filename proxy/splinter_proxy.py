@@ -4,6 +4,7 @@ import config
 from BaseHTTPServer import HTTPServer
 import httplib
 import Cookie
+from optparse import OptionParser
 import os
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import socket
@@ -362,6 +363,35 @@ def read_config_js():
 
     return content
 
+def redirect_to_log(log_file):
+    outf = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    os.close(1)
+    os.dup2(outf, 1)
+    os.close(2)
+    os.dup2(outf, 2)
+    os.close(outf)
+
+# Standard double-fork daemonization
+def daemonize():
+    global main_process
+
+    pid = os.fork()
+    if pid > 0:
+        main_process = False
+        sys.exit(0)
+
+    os.setsid()
+
+    devnullin = os.open("/dev/null", os.O_RDONLY)
+    os.close(0)
+    os.dup2(devnullin, 0)
+    os.close(devnullin)
+
+    pid = os.fork()
+    if pid > 0:
+        main_process = False
+        sys.exit(0)
+
 ########################################
 
 # SimpleHTTPRequestHandler serves files relative to the current working directory
@@ -370,12 +400,35 @@ script_path = os.path.realpath(os.path.abspath(sys.argv[0]))
 top_dir = os.path.dirname(os.path.dirname(script_path))
 os.chdir(os.path.join(top_dir, "web"))
 
-if len(sys.argv) == 1:
+parser = OptionParser()
+parser.add_option("-d", "--daemonize", action='store_true',
+                  help="run as a daemon")
+parser.add_option("", "--pid-file",
+                  help="location to write PID of daemon")
+parser.add_option("-l", "--log", metavar="<log file>",
+                  help="file to log to")
+
+options, args = parser.parse_args()
+
+if options.log:
+    redirect_to_log(options.log)
+
+if options.daemonize:
+    daemonize()
+    if options.pid_file:
+        try:
+            pid_file = open(options.pid_file, "w")
+            pid_file.write("%d\n" % os.getpid())
+            pid_file.close()
+        except IOError, e:
+            print >>sys.stderr, "Cannot write pid to '%s': %s" % (options.pid_file, e.args[1])
+
+if len(args) == 0:
     config_name = config.default_config
-elif len(sys.argv) == 2:
-    config_name = sys.argv[1]
+elif len(args) == 1:
+    config_name = args[1]
 else:
-    print >>sys.stderr, "Usage: splinter_proxy.py [<config_name>]"
+    print >>sys.stderr, "Usage: splinter_proxy.py [--daemonize] [--log=<logfile>] [<config_name>]"
     sys.exit(1)
 
 if not config_name in config.configs:
