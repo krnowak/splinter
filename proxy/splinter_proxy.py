@@ -100,6 +100,7 @@ class ProxyHandler(SimpleHTTPRequestHandler):
     def relay_response(self, response):
         self.send_response(response.status, response.reason)
         content = response.read()
+        seen_expires = False
         for header, value in response.getheaders():
             # BaseHTTPRequestHandler sends the 'Server' and 'Date' headers
             # We are handling the "session" with Bugzilla ourselves, so we
@@ -109,7 +110,16 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             # Transfer-Encoding to unchunked.
             if header.lower() in ('date', 'server', 'set-cookie', 'transfer-encoding', 'content-length'):
                 continue
+            if header.lower() == 'expires':
+                seen_expires = True
             self.send_header(header, value)
+        if not seen_expires and self.command == 'GET':
+            # Assume that attachments are immutable - give them an Expires of a month
+            if self.path.startswith('/attachment.cgi?'):
+                self.send_header('Expires', self.date_time_string(time.time() + 31*24*60*60))
+            # If we are running anonymously, allow bug content to be cached for 5 minutes
+            elif not ('bugzilla_login' in current_config and 'bugzilla_login' in current_config):
+                self.send_header('Expires', self.date_time_string(time.time() + 5*60))
         self.send_header('content-length', len(content))
         self.end_headers()
         self.wfile.write(content)
