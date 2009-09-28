@@ -15,7 +15,8 @@ JS_FILES =					\
 	js/reviewStorage.js			\
 	js/splinter.js				\
 	js/testUtils.js				\
-	js/utils.js
+	js/utils.js				\
+	js/xmlRpc.js
 
 
 TESTS =						\
