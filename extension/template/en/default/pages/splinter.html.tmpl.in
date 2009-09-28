@@ -23,7 +23,6 @@
   header = "Patch Review"
   style_urls = [ "/extensions/splinter/web/splinter.css" ]
   javascript_urls = [ "/extensions/splinter/web/jquery.min.js",
-                      "/extensions/splinter/web/config.js",
                       "/extensions/splinter/web/splinter.flat.js" ]
   subheader = "&nbsp;"
   header_addl_info = "&nbsp;"
