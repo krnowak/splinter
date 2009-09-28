@@ -22,7 +22,15 @@ function LocalReviewStorage() {
 }
 
 LocalReviewStorage.available = function() {
-    return 'localStorage' in window && window.localStorage != null;
+    // The try is a workaround for
+    //   https://bugzilla.mozilla.org/show_bug.cgi?id=517778
+    // where if cookies are disabled or set to ask, then the first attempt
+    // to access the localStorage property throws a security error.
+    try {
+        return 'localStorage' in window && window.localStorage != null;
+    } catch (e) {
+        return false;
+    }
 };
 
 LocalReviewStorage.prototype = {
