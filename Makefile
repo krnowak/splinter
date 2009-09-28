@@ -2,7 +2,7 @@ CFLAGS = -g -O2 -Wall
 CPPFLAGS := $(shell pkg-config --cflags glib-2.0 mozilla-js)
 LIBS := $(shell pkg-config --libs glib-2.0 mozilla-js)
 
-all: web/splinter.flat.js
+all: web/splinter.flat.js web/index.html
 
 jstest: jstest.o
 	$(CC) -o jstest jstest.o $(LIBS)

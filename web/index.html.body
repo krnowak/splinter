@@ -1,11 +1,11 @@
 <div id="error" style="display: none;"> </div>
-<div id="loading">Loading....</div>
 <div id="bugInfo" style="display: none;">
   <a id="bugLink">Bug <span id="bugId"></span></a> -
   <span id="bugShortDesc"></span> -
   <span id="bugReporter"></span> -
   <span id="bugCreationDate"></span>
 </div>
+<div id="loading">Loading....</div>
 <div id="enterBug" style="display: none;">
   Bug to review:
   <input id="enterBugInput" />
