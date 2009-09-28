@@ -33,10 +33,12 @@ my $text = Bugzilla->hook_args->{'text'};
 if ($$text =~ $REVIEW_RE) {
     my $base = Bugzilla->params->{'splinter_base'};
     my $bug_id = $bug->id;
-    if ($base =~ /\?/)
-        my $review_link = "<a href='$base&bug=$bug_id&attachment=$1'>Review</a>";
-    else
-        my $review_link = "<a href='$base?bug=$bug_id&attachment=$1'>Review</a>";
+    my $review_link;
+    if ($base =~ /\?/) {
+        $review_link = "<a href='$base&bug=$bug_id&attachment=$1'>Review</a>";
+    } else {
+        $review_link = "<a href='$base?bug=$bug_id&attachment=$1'>Review</a>";
+    }
     my $attach_link = Bugzilla::Template::get_attachment_link($1, "attachment $1");
 
     push(@$regexes, { match => $REVIEW_RE,
