@@ -3,6 +3,7 @@ include('Bug');
 include('Patch');
 include('Review');
 include('ReviewStorage');
+include('XmlRpc');
 
 var reviewStorage;
 var attachmentId;
@@ -94,8 +95,6 @@ function publishReview() {
     saveComment();
     theReview.setIntro($("#myComment").val());
 
-    var comment = "Review of attachment " + attachmentId + ":\n\n" + theReview;
-
     var newStatus = null;
     if (theAttachment.status && $("#attachmentStatus").val() != theAttachment.status) {
         newStatus = $("#attachmentStatus").val();
@@ -107,20 +106,46 @@ function publishReview() {
         document.location = newPageUrl(theBug.id);
     }
 
-    addComment(theBug, comment,
-               function(detail) {
-                   if (newStatus)
-                       updateAttachmentStatus(theAttachment, newStatus,
-                                              success,
-                                              function() {
-                                                  displayError("Published review; patch status could not be updated.");
-                                              });
-                   else
-                       success();
-               },
-               function(detail) {
-                   displayError("Failed to publish review.");
-               });
+    if (configHaveExtension) {
+        var params = {
+            attachment_id: theAttachment.id,
+            review: theReview.toString()
+        };
+
+        if (newStatus != null)
+            params['attachment_status'] = newStatus;
+
+        XmlRpc.call({
+                        url: '/xmlrpc.cgi',
+                        name: 'Splinter.publish_review',
+                        params: params,
+                        error: function(message) {
+                            displayError("Failed to publish review: " + message);
+                        },
+                        fault: function(faultCode, faultString) {
+                            displayError("Failed to publish review: " + faultString);
+                        },
+                        success: function(result) {
+                            success();
+                        }
+                    });
+    } else {
+        var comment = "Review of attachment " + attachmentId + ":\n\n" + theReview;
+        addComment(theBug, comment,
+                   function(detail) {
+                       if (newStatus)
+                           updateAttachmentStatus(theAttachment, newStatus,
+                                                  success,
+                                                  function() {
+                                                      displayError("Published review; patch status could not be updated.");
+                                                  });
+                       else
+                           success();
+                   },
+                   function(detail) {
+                       displayError("Failed to publish review.");
+                   });
+    }
 }
 
 function hideSaveDraftNotice() {

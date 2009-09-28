@@ -22,7 +22,8 @@ import xmlrpclib
 PROXIED_PATHS = [
     "/attachment.cgi",
     "/process_bug.cgi",
-    "/show_bug.cgi"
+    "/show_bug.cgi",
+    "/xmlrpc.cgi"
 ]
 
 def is_proxied(path):
