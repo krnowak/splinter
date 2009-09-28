@@ -306,7 +306,8 @@ def check_login_headers(headers):
 # subclass.
 class LoginTransport(xmlrpclib.Transport):
     def __init__(self, scheme, hostname, port):
-        xmlrpclib.Transport.__init__(self)
+        if hasattr(xmlrpclib.Transport, '__init__'):
+            xmlrpclib.Transport.__init__(self)
         self.scheme = scheme
         self.hostname = hostname
         self.port = port
