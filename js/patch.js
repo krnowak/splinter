@@ -267,11 +267,17 @@ Patch.prototype = {
 
         while (m != null) {
             // git and hg show a diff between a/foo/bar.c and b/foo/bar.c
+            // or between a/foo/bar.c and /dev/null for removals and the
+            // reverse for additions.
             var filename;
-            if (/^a\//.test(m[1]) && /^b\//.test(m[2]))
+            if (/^a\//.test(m[1]) &&
+                (/^b\//.test(m[2]) || /^\/dev\/null/.test(m[2]))) {
                 filename = m[1].substring(2);
-            else
+            } else if (/^\/dev\/null/.test(m[1]) && /^b\//.test(m[2])) {
+                filename = m[2].substring(2);
+            } else {
                 filename = m[1];
+            }
 
             var hunks = [];
             var pos = FILE_START_RE.lastIndex;

@@ -174,3 +174,41 @@ Subject: [PATCH] Fix missing semicolons in flattener.py output
 
 Add semicolons after generated 'a = b' assignments.
 >>>, patch.intro);
+
+// Git patch representing a move
+
+patch = new Patch.Patch(<<<
+diff --git a/foo/README b/foo/README
+deleted file mode 100644
+index 4eac5f6..0000000
+--- a/foo/README
++++ /dev/null
+@@ -1,3 +0,0 @@
+-Some
+-Readme
+-File
+diff --git a/bar/README b/bar/README
+new file mode 100644
+index 0000000..4eac5f6
+--- /dev/null
++++ b/bar/README
+@@ -0,0 +1,3 @@
++Some
++Readme
++File
+>>>);
+
+assertEquals(<<<
+::: foo/README
+@@ -1,3 +0,0
+- 1 Some
+- 2 Readme
+- 3 File
+
+::: bar/README
+@@ -0,0 +1,3
+   + 1 Some
+   + 2 Readme
+   + 3 File
+>>>, patchToString(patch));
+
