@@ -133,18 +133,21 @@ Hunk.prototype = {
             }
         }
 
-        endSegment();
-
         // git mail-formatted patches end with --\n<git version> like a signature
         // This is troublesome since it looks like a subtraction at the end
         // of last hunk of the last file. Handle this specifically rather than
         // generically stripping excess lines to be kind to hand-edited patches
         if (totalOld > oldCount &&
-            ((lines[lines.length - 1][2] & REMOVED) != 0) &&
+            lines[lines.length - 1][1] == null &&
             lines[lines.length - 1][0][0] == '-')
         {
             lines.pop();
+            currentOldCount--;
+            if (currentOldCount == 0 && currentNewCount == 0)
+                currentStart = -1;
         }
+
+        endSegment();
 
         this.lines = lines;
     },
