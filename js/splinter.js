@@ -258,8 +258,10 @@ function getQueryParams() {
 }
 
 function ensureCommentArea(row) {
+    var file = $(row).data('patchFile');
+    var colSpan = file.status == Patch.CHANGED ? 3 : 1;
     if (!row.nextSibling || row.nextSibling.className != "comment-area")
-        $("<tr class='comment-area'><td colSpan='3'>"
+        $("<tr class='comment-area'><td colSpan='" + colSpan + "'>"
           + "</td></tr>")
             .insertAfter(row);
 
@@ -470,6 +472,31 @@ function EL(element, cls, text) {
     return e;
 }
 
+function onRowDblClick(e) {
+    var file = $(this).data('patchFile');
+
+    if (file.status == Patch.CHANGED) {
+        var leftX = this.offsetLeft;
+        var parent = this.offsetParent;
+        while (parent != document.body) {
+            leftX += parent.offsetLeft;
+            parent = parent.offsetParent;
+        }
+        var delta = e.pageX - (leftX + this.offsetWidth/2);
+        var type;
+        if (delta < - 20)
+        type = Patch.REMOVED;
+        else if (delta < 20)
+        type = Patch.CHANGED;
+        else
+            type = Patch.ADDED;
+    } else {
+        type = file.status;
+    }
+
+    insertCommentForRow(this, type);
+}
+
 function addPatchFile(file) {
     var fileDiv = $("<div class='file'></div>").appendTo("#files").get(0);
     file.div = fileDiv;
@@ -478,12 +505,20 @@ function addPatchFile(file) {
         .find("span").text(file.filename).end()
         .appendTo(fileDiv);
 
-    tbody = $(fileDiv).append("<table class='file-table'>"
-                              + "<col class='old-column'></col>"
-                              + "<col class='middle-column'></col>"
-                              + "<col class='new-column'></col>"
-                              + "<tbody></tbody>"
-                              + "</table>").find("tbody").get(0);
+    var q = $("<table class='file-table'>"
+              + "</table>").appendTo(fileDiv);
+    if (file.status != Patch.ADDED)
+        q.append("<col class='old-column'></col>");
+    if (file.status == Patch.CHANGED)
+        q.append("<col class='middle-column'></col>");
+    if (file.status != Patch.REMOVED)
+        q.append("<col class='new-column'></col>");
+    q.append("<tbody></tbody>");
+
+    if (file.status == Patch.CHANGED)
+        q.addClass("file-table-changed");
+
+    var tbody = q.find("tbody").get(0);
     for (var i = 0; i  < file.hunks.length; i++) {
         var hunk = file.hunks[i];
         var hunkHeader = EL("tr", "hunk-header");
@@ -493,7 +528,7 @@ function addPatchFile(file) {
                                 "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1)));
         if (hunk.functionLine)
             hunkCell.appendChild(EL("div", "hunk-function-line", hunk.functionLine));
-        hunkCell.colSpan = 3;
+        hunkCell.colSpan = file.status == Patch.CHANGED ? 3 : 1;
         hunkHeader.appendChild(hunkCell);
 
         hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags, line) {
@@ -512,39 +547,24 @@ function addPatchFile(file) {
                              tr.appendChild(EL("td", "old-line " + oldStyle,
                                                oldText != "" ? oldText : "\u00a0"));
                              oldLine++;
-                         } else {
+                         } else if (file.status == Patch.CHANGED) {
                              tr.appendChild(EL("td", "old-line"));
                          }
 
-                         tr.appendChild(EL("td", "line-middle"));
+                         if (file.status == Patch.CHANGED)
+                             tr.appendChild(EL("td", "line-middle"));
 
                          if (newText != null) {
                              tr.appendChild(EL("td", "new-line " + newStyle,
                                                newText != "" ? newText : "\u00a0"));
                              newLine++;
-                         } else {
+                         } else if (file.status == Patch.CHANGED) {
                              tr.appendChild(EL("td", "new-line"));
                          }
 
                          $(tr).data('patchFile', file);
                          $(tr).data('patchLocation', loc);
-                         $(tr).dblclick(function(e) {
-                                            var leftX = this.offsetLeft;
-                                            var parent = this.offsetParent;
-                                            while (parent != document.body) {
-                                                leftX += parent.offsetLeft;
-                                                parent = parent.offsetParent;
-                                            }
-                                            var delta = e.pageX - (leftX + this.offsetWidth/2);
-                                            var type;
-                                            if (delta < - 20)
-                                                type = Patch.REMOVED;
-                                            else if (delta < 20)
-                                                type = Patch.CHANGED;
-                                            else
-                                                type = Patch.ADDED;
-                                            insertCommentForRow(this, type);
-                                        });
+                         $(tr).dblclick(onRowDblClick);
 
                          tbody.appendChild(tr);
 

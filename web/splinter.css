@@ -235,18 +235,18 @@ body {
     width: 3px;
 }
 
-.comment-removed {
+.file-table-changed .comment-removed {
     width: 50%;
     float: left;
 }
 
-.comment-changed {
+.file-table-changed .comment-changed {
     margin-left: 25%;
     margin-right: 25%;
     clear: both;
 }
 
-.comment-added {
+.file-table-changed .comment-added {
     width: 50%;
     float: right;
 }
@@ -262,7 +262,6 @@ body {
 }
 
 #commentEditor {
-    width: 50%;
     background: #ffeeaa;
 }
 
@@ -276,7 +275,7 @@ body {
 }
 
 #commentEditorInner {
-    margin: 0.5em;
+    padding: 0.5em;
 }
 
 #commentEditor textarea {
