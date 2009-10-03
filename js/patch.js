@@ -166,13 +166,14 @@ Hunk.prototype = {
     }
 };
 
-function File(filename, hunks) {
-    this._init(filename, hunks);
+function File(filename, status, hunks) {
+    this._init(filename, status, hunks);
 }
 
 File.prototype = {
-    _init : function(filename, hunks) {
+    _init : function(filename, status, hunks) {
         this.filename = filename;
+        this.status = status;
         this.hunks = hunks;
 
         var l = 0;
@@ -273,11 +274,17 @@ Patch.prototype = {
             // or between a/foo/bar.c and /dev/null for removals and the
             // reverse for additions.
             var filename;
-            if (/^a\//.test(m[1]) &&
-                (/^b\//.test(m[2]) || /^\/dev\/null/.test(m[2]))) {
+            var status = undefined;
+
+            if (/^a\//.test(m[1]) && /^b\//.test(m[2])) {
                 filename = m[1].substring(2);
+                status = CHANGED;
+            } else if (/^a\//.test(m[1]) && /^\/dev\/null/.test(m[2])) {
+                filename = m[1].substring(2);
+                status = REMOVED;
             } else if (/^\/dev\/null/.test(m[1]) && /^b\//.test(m[2])) {
                 filename = m[2].substring(2);
+                status = ADDED;
             } else {
                 filename = m[1];
             }
@@ -299,7 +306,19 @@ Patch.prototype = {
                 hunks.push(new Hunk(oldStart, oldCount, newStart, newCount, m2[5], m2[6]));
             }
 
-            this.files.push(new File(filename, hunks));
+            if (status === undefined) {
+                // For non-Hg/Git we use assume patch was generated non-zero context
+                // and just look at the patch to detect added/removed. Bzr actually
+                // says added/removed in the diff, but SVN/CVS don't
+                if (hunks.length == 1 && hunks[0].oldCount == 0)
+                    status = ADDED;
+                else if (hunks.length == 1 && hunks[0].newCount == 0)
+                    status = REMOVED;
+                else
+                    status = CHANGED;
+            }
+
+            this.files.push(new File(filename, status, hunks));
 
             FILE_START_RE.lastIndex = pos;
             m = FILE_START_RE.exec(text);
