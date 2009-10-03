@@ -217,6 +217,11 @@ function queueSaveDraft() {
         saveDraftTimeoutId = setTimeout(saveDraft, 10000);
 }
 
+function flushSaveDraft() {
+    if (saveDraftTimeoutId != null)
+        saveDraft();
+}
+
 function getQueryParams() {
     var query = window.location.search.substring(1);
     if (query == null || query == "")
@@ -588,7 +593,9 @@ function start(xml) {
     $("#overview").show();
     $("#files").show();
 
-    $("#bugLink").attr('href', newPageUrl(theBug.id));
+    $("#bugLink")
+        .click(flushSaveDraft)
+        .attr('href', newPageUrl(theBug.id));
 
     $("#subtitle").text("Attachment " + theAttachment.id + " - " + theAttachment.description);
     $("#information").text(Utils.formatDate(theAttachment.date));
