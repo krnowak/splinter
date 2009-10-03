@@ -501,8 +501,25 @@ function addPatchFile(file) {
     var fileDiv = $("<div class='file'></div>").appendTo("#files").get(0);
     file.div = fileDiv;
 
-    $("<div class='file-label'><span></span></div/>")
-        .find("span").text(file.filename).end()
+    var statusString;
+    switch (file.status) {
+    case Patch.ADDED:
+        statusString = " (new file)";
+	break;
+    case Patch.REMOVED:
+        statusString = " (removed)";
+	break;
+    case Patch.CHANGED:
+        statusString = "";
+	break;
+    }
+
+    $("<div class='file-label'>"
+      + "<span class='file-label-name'></span>"
+      + "<span class='file-label-status'></span>"
+      + "</div/>")
+        .find(".file-label-name").text(file.filename).end()
+        .find(".file-label-status").text(statusString).end()
         .appendTo(fileDiv);
 
     var q = $("<table class='file-table'>"
@@ -521,15 +538,17 @@ function addPatchFile(file) {
     var tbody = q.find("tbody").get(0);
     for (var i = 0; i  < file.hunks.length; i++) {
         var hunk = file.hunks[i];
-        var hunkHeader = EL("tr", "hunk-header");
-        tbody.appendChild(hunkHeader);
-        var hunkCell = EL("td", "hunk-cell");
-        hunkCell.appendChild(EL("div", "hunk-lines",
-                                "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1)));
-        if (hunk.functionLine)
-            hunkCell.appendChild(EL("div", "hunk-function-line", hunk.functionLine));
-        hunkCell.colSpan = file.status == Patch.CHANGED ? 3 : 1;
-        hunkHeader.appendChild(hunkCell);
+        if (hunk.oldStart > 1) {
+            var hunkHeader = EL("tr", "hunk-header");
+            tbody.appendChild(hunkHeader);
+            var hunkCell = EL("td", "hunk-cell");
+            hunkCell.appendChild(EL("div", "hunk-lines",
+                                    "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1)));
+            if (hunk.functionLine)
+                hunkCell.appendChild(EL("div", "hunk-function-line", hunk.functionLine));
+            hunkCell.colSpan = file.status == Patch.CHANGED ? 3 : 1;
+            hunkHeader.appendChild(hunkCell);
+        }
 
         hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags, line) {
                          var tr = document.createElement("tr");

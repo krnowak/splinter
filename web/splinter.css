@@ -178,18 +178,17 @@ body {
 
 .file-label {
     margin-top: 1em;
-    padding: 0.5em;
+    margin-bottom: 0.5em;
 }
 
-.file-label span {
-    border: 1px solid black;
-    padding: 0.5em;
-    background: #ccffff;
+.file-label-name {
+    font-weight: bold;
 }
 
-.hunk-header {
-    border: 1px solid black;
-    background: #dddddd;
+.hunk-header td {
+    background: #ddccbb;
+    font-family: "DejaVu Sans Mono", monospace;
+    font-size: 80%;
 }
 
 .hunk-cell {
@@ -197,7 +196,6 @@ body {
 }
 
 .hunk-lines {
-    color: red;
     float: left;
 }
 
