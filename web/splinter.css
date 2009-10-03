@@ -81,6 +81,12 @@ body {
     color: black;
 }
 
+#haveDraftNotice {
+    float: right;
+    color: #bb0000;
+    font-weight: bold;
+}
+
 #overview {
     margin-top: 0.5em;
     margin-bottom: 0.5em;

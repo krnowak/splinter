@@ -14,6 +14,7 @@ var theReview;
 
 var reviewers = {};
 
+var updateHaveDraftTimeoutId;
 var saveDraftTimeoutId;
 var saveDraftNoticeTimeoutId;
 var savingDraft = false;
@@ -158,6 +159,21 @@ function haveDraft() {
     }
 
     return false;
+}
+
+function updateHaveDraft() {
+    clearTimeout(updateHaveDraftTimeoutId);
+    updateHaveDraftTimeoutId = null;
+
+    if (haveDraft())
+        $("#haveDraftNotice").show();
+    else
+        $("#haveDraftNotice").hide();
+}
+
+function queueUpdateHaveDraft() {
+    if (updateHaveDraftTimeoutId == null)
+        updateHaveDraftTimeoutId = setTimeout(updateHaveDraft, 0);
 }
 
 function hideSaveDraftNotice() {
@@ -351,6 +367,7 @@ function saveComment() {
 
     currentEditComment = null;
     saveDraft();
+    queueUpdateHaveDraft();
 }
 
 function cancelComment(previousText) {
@@ -368,8 +385,10 @@ function insertCommentEditor(commentArea, file, location, type) {
 
     var reviewFile = theReview.getFile(file.filename);
     var comment = reviewFile.getComment(location, type);
-    if (!comment)
+    if (!comment) {
         comment = reviewFile.addComment(location, type, "");
+        queueUpdateHaveDraft();
+    }
 
     var previousText = comment.comment;
 
@@ -620,6 +639,9 @@ function start(xml) {
     for (i = 0; i < thePatch.files.length; i++)
         addFileNavigationLink(thePatch.files[i]);
 
+    $("<div id='haveDraftNotice'style='display: none;'>Draft</div>"
+      + "<div class='clear'></div>").appendTo("#navigation");
+
     var numReviewers = 0;
     for (i = 0; i < theBug.comments.length; i++) {
         var comment = theBug.comments[i];
@@ -674,7 +696,12 @@ function start(xml) {
 
     $("#myComment")
         .val(theReview.intro)
-        .keypress(queueSaveDraft);
+        .keypress(function() {
+                      queueSaveDraft();
+                      queueUpdateHaveDraft();
+                  });
+
+    queueUpdateHaveDraft();
 
     $("#publishButton").click(publishReview);
 }
