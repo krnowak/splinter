@@ -447,7 +447,8 @@ function EL(element, cls, text) {
 }
 
 function addPatchFile(file) {
-    var fileDiv = $("<div></div>").appendTo("#files");
+    var fileDiv = $("<div class='file'></div>").appendTo("#files").get(0);
+    file.div = fileDiv;
 
     $("<div class='file-label'><span></span></div/>")
         .find("span").text(file.filename).end()
@@ -532,6 +533,48 @@ function addPatchFile(file) {
     }
 }
 
+function showOverview() {
+    $("#bugInfo").show();
+    $("#overview").show();
+    $(".file").hide();
+}
+
+function showPatchFile(file) {
+    $("#bugInfo").hide();
+    $("#overview").hide();
+    $(".file").hide();
+    if (file.div)
+        $(file.div).show();
+    else
+        addPatchFile(file);
+}
+
+function addNavigationLink(title, callback, selected) {
+    if ($("#navigation").children().size() > 0)
+        $("#navigation").append(" | ");
+
+    var q = $("<a class='navigation-link' href='javascript:void(0)'></a")
+        .text(title)
+        .appendTo("#navigation")
+        .click(function() {
+                   if (!$(this).hasClass("navigation-link-selected")) {
+                       $(".navigation-link").removeClass("navigation-link-selected");
+                       $(this).addClass("navigation-link-selected");
+                       callback();
+                   }
+               });
+
+    if (selected)
+        q.addClass("navigation-link-selected");
+}
+
+function addFileNavigationLink(file) {
+    var basename = file.filename.replace(/.*\//, "");
+    addNavigationLink(basename, function() {
+        showPatchFile(file);
+    });
+}
+
 var REVIEW_RE = /^\s*review\s+of\s+attachment\s+(\d+)\s*:\s*/i;
 
 function start(xml) {
@@ -541,7 +584,8 @@ function start(xml) {
 
     $("#loading").hide();
     $("#attachmentInfo").show();
-    $("#intro").show();
+    $("#navigation").show();
+    $("#overview").show();
     $("#files").show();
 
     $("#bugLink").attr('href', newPageUrl(theBug.id));
@@ -564,6 +608,10 @@ function start(xml) {
         $("#patchIntro").text(thePatch.intro);
     else
         $("#patchIntro").hide();
+
+    addNavigationLink("Overview", showOverview, true);
+    for (i = 0; i < thePatch.files.length; i++)
+        addFileNavigationLink(thePatch.files[i]);
 
     var numReviewers = 0;
     for (i = 0; i < theBug.comments.length; i++) {
@@ -620,9 +668,6 @@ function start(xml) {
     $("#myComment")
         .val(theReview.intro)
         .keypress(queueSaveDraft);
-
-    for (i = 0; i < thePatch.files.length; i++)
-        addPatchFile(thePatch.files[i]);
 
     $("#publishButton").click(publishReview);
 }

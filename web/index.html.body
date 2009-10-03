@@ -1,4 +1,5 @@
 <div id="error" style="display: none;"> </div>
+<div id="navigation" style="display: none;"></div>
 <div id="bugInfo" style="display: none;">
   <a id="bugLink">Bug <span id="bugId"></span></a> -
   <span id="bugShortDesc"></span> -
@@ -26,7 +27,7 @@
   </table>
   <a id="originalBugLink">Go to bug</a>
 </div>
-<div id="intro" style="display: none;">
+<div id="overview" style="display: none;">
   <div id="patchIntro">
   </div>
   <div id="oldReviews">

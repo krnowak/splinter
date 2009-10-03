@@ -68,7 +68,20 @@ body {
     text-decoration: line-through ;
 }
 
-#intro {
+#navigation {
+    color: #888888;
+}
+
+.navigation-link {
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.navigation-link-selected {
+    color: black;
+}
+
+#overview {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
