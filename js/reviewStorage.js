@@ -96,11 +96,26 @@ LocalReviewStorage.prototype = {
         localStorage.splinterReviews = JSON.stringify(this._reviewInfos);
     },
 
+    _deleteReviewInfo : function(bug, attachment) {
+        var reviewIndex = this._findReview(bug, attachment);
+        if (reviewIndex >= 0) {
+            this._reviewInfos.splice(reviewIndex, 1);
+            localStorage.splinterReviews = JSON.stringify(this._reviewInfos);
+        }
+    },
+
     saveDraft : function(bug, attachment, review) {
         var propertyName = this._reviewPropertyName(bug, attachment);
 
         this._updateOrCreateReviewInfo(bug, attachment, { isDraft: true });
         localStorage[propertyName] = "" + review;
+    },
+
+    deleteDraft : function(bug, attachment, review) {
+        var propertyName = this._reviewPropertyName(bug, attachment);
+
+        this._deleteReviewInfo(bug, attachment);
+        delete localStorage[propertyName];
     },
 
     draftPublished : function(bug, attachment) {

@@ -148,7 +148,20 @@ function publishReview() {
     }
 }
 
+function haveDraft() {
+    if ($("#myComment").val().search(/\S/) >= 0)
+        return true;
+
+    for (var i = 0; i  < theReview.files.length; i++) {
+        if (theReview.files[i].comments.length > 0)
+            return true;
+    }
+
+    return false;
+}
+
 function hideSaveDraftNotice() {
+    clearTimeout(saveDraftNoticeTimeoutId);
     saveDraftNoticeTimeoutId = null;
     $("#saveDraftNotice").hide();
 }
@@ -177,7 +190,13 @@ function saveDraft() {
 
     theReview.setIntro($("#myComment").val());
 
-    reviewStorage.saveDraft(theBug, theAttachment, theReview);
+    var draftSaved = false;
+    if (haveDraft()) {
+        reviewStorage.saveDraft(theBug, theAttachment, theReview);
+        draftSaved = true;
+    } else {
+        reviewStorage.deleteDraft(theBug, theAttachment, theReview);
+    }
 
     if (currentEditComment && !currentEditComment.comment) {
         currentEditComment = currentEditComment.file.addComment(currentEditComment.location,
@@ -186,8 +205,11 @@ function saveDraft() {
     }
 
     savingDraft = false;
-    $("#saveDraftNotice")
-        .text("Saved Draft");
+    if (draftSaved)
+        $("#saveDraftNotice")
+            .text("Saved Draft");
+    else
+        hideSaveDraftNotice();
 }
 
 function queueSaveDraft() {
