@@ -259,7 +259,7 @@ function getQueryParams() {
 
 function ensureCommentArea(row) {
     var file = $(row).data('patchFile');
-    var colSpan = file.status == Patch.CHANGED ? 3 : 1;
+    var colSpan = file.status == Patch.CHANGED ? 5 : 2;
     if (!row.nextSibling || row.nextSibling.className != "comment-area")
         $("<tr class='comment-area'><td colSpan='" + colSpan + "'>"
           + "</td></tr>")
@@ -524,16 +524,29 @@ function addPatchFile(file) {
 
     var q = $("<table class='file-table'>"
               + "</table>").appendTo(fileDiv);
-    if (file.status != Patch.ADDED)
+    if (file.status != Patch.ADDED) {
+        q.append("<col class='line-number-column'></col>");
         q.append("<col class='old-column'></col>");
-    if (file.status == Patch.CHANGED)
+    }
+    if (file.status == Patch.CHANGED) {
         q.append("<col class='middle-column'></col>");
-    if (file.status != Patch.REMOVED)
+    }
+    if (file.status != Patch.REMOVED) {
+        q.append("<col class='line-number-column'></col>");
         q.append("<col class='new-column'></col>");
-    q.append("<tbody></tbody>");
+    }
 
     if (file.status == Patch.CHANGED)
         q.addClass("file-table-changed");
+
+    var lastHunk = file.hunks[file.hunks.length -1];
+    var lastLine = Math.max(lastHunk.oldStart + lastHunk.oldCount- 1,
+                            lastHunk.newStart + lastHunk.newCount- 1);
+
+    if (lastLine >= 1000)
+        q.addClass("file-table-wide-numbers");
+
+    q.append("<tbody></tbody>");
 
     var tbody = q.find("tbody").get(0);
     for (var i = 0; i  < file.hunks.length; i++) {
@@ -541,12 +554,10 @@ function addPatchFile(file) {
         if (hunk.oldStart > 1) {
             var hunkHeader = EL("tr", "hunk-header");
             tbody.appendChild(hunkHeader);
-            var hunkCell = EL("td", "hunk-cell");
-            hunkCell.appendChild(EL("div", "hunk-lines",
-                                    "Lines " + hunk.oldStart + "-" + (hunk.oldStart + hunk.oldCount - 1)));
-            if (hunk.functionLine)
-                hunkCell.appendChild(EL("div", "hunk-function-line", hunk.functionLine));
-            hunkCell.colSpan = file.status == Patch.CHANGED ? 3 : 1;
+            hunkHeader.appendChild(EL("td")); // line number column
+            var hunkCell = EL("td", "hunk-cell",
+                              hunk.functionLine ? hunk.functionLine : "\u00a0");
+            hunkCell.colSpan = file.status == Patch.CHANGED ? 4 : 1;
             hunkHeader.appendChild(hunkCell);
         }
 
@@ -563,10 +574,12 @@ function addPatchFile(file) {
                              newStyle = "added-line";
 
                          if (oldText != null) {
+                             tr.appendChild(EL("td", "line-number", oldLine.toString()));
                              tr.appendChild(EL("td", "old-line " + oldStyle,
                                                oldText != "" ? oldText : "\u00a0"));
                              oldLine++;
                          } else if (file.status == Patch.CHANGED) {
+                             tr.appendChild(EL("td", "line-number"));
                              tr.appendChild(EL("td", "old-line"));
                          }
 
@@ -574,10 +587,12 @@ function addPatchFile(file) {
                              tr.appendChild(EL("td", "line-middle"));
 
                          if (newText != null) {
+                             tr.appendChild(EL("td", "line-number", newLine.toString()));
                              tr.appendChild(EL("td", "new-line " + newStyle,
                                                newText != "" ? newText : "\u00a0"));
                              newLine++;
                          } else if (file.status == Patch.CHANGED) {
+                             tr.appendChild(EL("td", "line-number"));
                              tr.appendChild(EL("td", "new-line"));
                          }
 

@@ -195,15 +195,6 @@ body {
     padding: 2px;
 }
 
-.hunk-lines {
-    float: left;
-}
-
-.hunk-function-line {
-    float: left;
-    margin-left: 2em;
-}
-
 .old-line, .new-line {
     white-space: pre;
     font-family: "DejaVu Sans Mono", monospace;
@@ -229,6 +220,21 @@ body {
     table-layout: fixed;
 }
 
+.line-number {
+    font-size: 80%;
+    text-align: right;
+    padding-right: 0.25em;
+    color: #888888;
+}
+
+.line-number-column {
+    width: 2em;
+}
+
+.file-table-wide-numbers .line-number-column {
+    width: 3em;
+}
+
 .middle-column {
     width: 3px;
 }
@@ -251,16 +257,18 @@ body {
 
 .comment-frame {
     border: 1px solid black;
-    margin: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 2em;
+}
+
+.file-table-wide-numbers .comment-frame {
+    margin-left: 3em;
 }
 
 .comment .review-info {
     margin-top: 0.5em;
     font-size: 80%;
-}
-
-#commentEditor {
-    background: #ffeeaa;
 }
 
 #commentTextFrame {
@@ -273,7 +281,13 @@ body {
 }
 
 #commentEditorInner {
+    background: #ffeeaa;
     padding: 0.5em;
+    margin-left: 2em;
+}
+
+.file-table-wide-numbers #commentEditorInner {
+    margin-left: 3em;
 }
 
 #commentEditor textarea {
