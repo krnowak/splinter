@@ -1,5 +1,6 @@
 /* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
 include('Bug');
+include('Dialog');
 include('Patch');
 include('Review');
 include('ReviewStorage');
@@ -151,7 +152,35 @@ function publishReview() {
     }
 }
 
+function doDiscardReview() {
+    if (theAttachment.status)
+        $("#attachmentStatus").val(theAttachment.status);
+
+    $("#myComment").val("");
+    $("#emptyCommentNotice").show();
+
+    for (var i = 0; i  < theReview.files.length; i++) {
+        while (theReview.files[i].comments.length > 0)
+            theReview.files[i].comments[0].remove();
+    }
+    updateMyPatchComments();
+
+    updateHaveDraft();
+    saveDraft();
+}
+
+function discardReview() {
+    var dialog = new Dialog.Dialog("Really discard your changes?",
+                                   'Continue', function() {},
+                                   'Discard', doDiscardReview);
+    dialog.show();
+    dialog.focus('Continue');
+}
+
 function haveDraft() {
+    if (theAttachment.status && $("#attachmentStatus").val() != theAttachment.status)
+        return true;
+
     if ($("#myComment").val().search(/\S/) >= 0)
         return true;
 
@@ -167,10 +196,15 @@ function updateHaveDraft() {
     clearTimeout(updateHaveDraftTimeoutId);
     updateHaveDraftTimeoutId = null;
 
-    if (haveDraft())
+    if (haveDraft()) {
+        $("#publishButton").removeAttr('disabled');
+        $("#cancelButton").removeAttr('disabled');
         $("#haveDraftNotice").show();
-    else
+    } else {
+        $("#publishButton").attr('disabled', 1);
+        $("#cancelButton").attr('disabled', 1);
         $("#haveDraftNotice").hide();
+    }
 }
 
 function queueUpdateHaveDraft() {
@@ -803,7 +837,9 @@ function start(xml) {
         .appendTo($("#attachmentStatus")); }
 
     if (theAttachment.status != null)
-        $("#attachmentStatus").val(theAttachment.status);
+        $("#attachmentStatus")
+            .val(theAttachment.status)
+            .change(queueUpdateHaveDraft);
     else
         $("#attachmentStatusSpan").hide();
 
@@ -896,6 +932,7 @@ function start(xml) {
     queueUpdateHaveDraft();
 
     $("#publishButton").click(publishReview);
+    $("#cancelButton").click(discardReview);
 }
 
 function gotBug(xml) {
