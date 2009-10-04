@@ -149,11 +149,51 @@ textarea:focus {
 .review {
     border: 1px solid black;
     font-size: 90%;
+    margin-top: 0.25em;
     margin-bottom: 1em;
 }
 
 .review-intro {
     margin-top: 0.5em;
+}
+
+.review-patch-file {
+    margin-top: 0.5em;
+    font-weight: bold;
+}
+
+.review-patch-comment {
+    border: 1px solid white;
+    padding: 1px;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    cursor: pointer;
+    white-space: pre-wrap;
+}
+
+.review-patch-comment:hover {
+    border: 1px solid #8888ff;
+}
+
+.review-patch-comment .file-table {
+    width: 50%;
+}
+
+.review-patch-comment .file-table-changed {
+    width: 100%;
+}
+
+.review-patch-comment-separator {
+    margin: 0.5em;
+    border-bottom: 1px solid #888888;
+}
+
+div.review-patch-comment-text {
+    margin-left: 2em;
+}
+
+.review-patch-comment .reviewer-box {
+    border-left-width: 4px;
 }
 
 #restored {
@@ -183,7 +223,15 @@ textarea:focus {
     color: #888888;
 }
 
+#myPatchComments {
+    border: 1px solid black;
+    border-top-width: 0px;
+    padding: 0.5em;
+    font-size: 90%;
+}
+
 #buttonBox {
+    margin-top: 0.5em;
     float: right;
 }
 

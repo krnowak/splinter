@@ -340,6 +340,8 @@ function addCommentDisplay(commentArea, comment) {
             .find(".review-date").text(Utils.formatDate(review.date)).end()
             .appendTo(q.find(".reviewer-box"));
     }
+
+    comment.div = q.get(0);
 }
 
 function saveComment() {
@@ -513,6 +515,90 @@ function onRowDblClick(e) {
     insertCommentForRow(this, type);
 }
 
+function appendPatchTable(type, maxLine, parentDiv) {
+    var q = $("<table class='file-table'>"
+              + "</table>").appendTo(parentDiv);
+    if (type != Patch.ADDED) {
+        q.append("<col class='line-number-column'></col>");
+        q.append("<col class='old-column'></col>");
+    }
+    if (type == Patch.CHANGED) {
+        q.append("<col class='middle-column'></col>");
+    }
+    if (type != Patch.REMOVED) {
+        q.append("<col class='line-number-column'></col>");
+        q.append("<col class='new-column'></col>");
+    }
+
+    if (type == Patch.CHANGED)
+        q.addClass("file-table-changed");
+
+    if (maxLine >= 1000)
+        q.addClass("file-table-wide-numbers");
+
+    q.append("<tbody></tbody>");
+    return q.find("tbody").get(0);
+}
+
+function appendPatchHunk(file, hunk, tableType, includeComments, clickable, tbody, filter) {
+    hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags, line) {
+                     if (filter && !filter(loc))
+                         return;
+
+                     var tr = document.createElement("tr");
+
+                     var oldStyle = "";
+                     var newStyle = "";
+                     if ((flags & Patch.CHANGED) != 0)
+                         oldStyle = newStyle = "changed-line";
+                     else if ((flags & Patch.REMOVED) != 0)
+                         oldStyle = "removed-line";
+                     else if ((flags & Patch.ADDED) != 0)
+                         newStyle = "added-line";
+
+                     if (tableType != Patch.ADDED) {
+                         if (oldText != null) {
+                             tr.appendChild(EL("td", "line-number", oldLine.toString()));
+                             tr.appendChild(EL("td", "old-line " + oldStyle,
+                                               oldText != "" ? oldText : "\u00a0"));
+                             oldLine++;
+                         } else {
+                             tr.appendChild(EL("td", "line-number"));
+                             tr.appendChild(EL("td", "old-line"));
+                         }
+                     }
+
+                     if (tableType == Patch.CHANGED)
+                         tr.appendChild(EL("td", "line-middle"));
+
+                     if (tableType != Patch.REMOVED) {
+                         if (newText != null) {
+                             tr.appendChild(EL("td", "line-number", newLine.toString()));
+                             tr.appendChild(EL("td", "new-line " + newStyle,
+                                               newText != "" ? newText : "\u00a0"));
+                             newLine++;
+                         } else if (tableType == Patch.CHANGED) {
+                             tr.appendChild(EL("td", "line-number"));
+                             tr.appendChild(EL("td", "new-line"));
+                         }
+                     }
+
+                     if (clickable){
+                         $(tr).data('patchFile', file);
+                         $(tr).data('patchLocation', loc);
+                         $(tr).dblclick(onRowDblClick);
+                     }
+
+                     tbody.appendChild(tr);
+
+                     if (includeComments && line.reviewComments != null)
+                         for (var k = 0; k < line.reviewComments.length; k++) {
+                             var commentArea = ensureCommentArea(tr);
+                             addCommentDisplay(commentArea, line.reviewComments[k]);
+                         }
+                 });
+}
+
 function addPatchFile(file) {
     var fileDiv = $("<div class='file'></div>").appendTo("#files").get(0);
     file.div = fileDiv;
@@ -538,33 +624,12 @@ function addPatchFile(file) {
         .find(".file-label-status").text(statusString).end()
         .appendTo(fileDiv);
 
-    var q = $("<table class='file-table'>"
-              + "</table>").appendTo(fileDiv);
-    if (file.status != Patch.ADDED) {
-        q.append("<col class='line-number-column'></col>");
-        q.append("<col class='old-column'></col>");
-    }
-    if (file.status == Patch.CHANGED) {
-        q.append("<col class='middle-column'></col>");
-    }
-    if (file.status != Patch.REMOVED) {
-        q.append("<col class='line-number-column'></col>");
-        q.append("<col class='new-column'></col>");
-    }
-
-    if (file.status == Patch.CHANGED)
-        q.addClass("file-table-changed");
-
     var lastHunk = file.hunks[file.hunks.length -1];
     var lastLine = Math.max(lastHunk.oldStart + lastHunk.oldCount- 1,
                             lastHunk.newStart + lastHunk.newCount- 1);
 
-    if (lastLine >= 1000)
-        q.addClass("file-table-wide-numbers");
+    var tbody = appendPatchTable(file.status, lastLine, fileDiv);
 
-    q.append("<tbody></tbody>");
-
-    var tbody = q.find("tbody").get(0);
     for (var i = 0; i  < file.hunks.length; i++) {
         var hunk = file.hunks[i];
         if (hunk.oldStart > 1) {
@@ -577,54 +642,87 @@ function addPatchFile(file) {
             hunkHeader.appendChild(hunkCell);
         }
 
-        hunk.iterate(function(loc, oldLine, oldText, newLine, newText, flags, line) {
-                         var tr = document.createElement("tr");
-
-                         var oldStyle = "";
-                         var newStyle = "";
-                         if ((flags & Patch.CHANGED) != 0)
-                             oldStyle = newStyle = "changed-line";
-                         else if ((flags & Patch.REMOVED) != 0)
-                             oldStyle = "removed-line";
-                         else if ((flags & Patch.ADDED) != 0)
-                             newStyle = "added-line";
-
-                         if (oldText != null) {
-                             tr.appendChild(EL("td", "line-number", oldLine.toString()));
-                             tr.appendChild(EL("td", "old-line " + oldStyle,
-                                               oldText != "" ? oldText : "\u00a0"));
-                             oldLine++;
-                         } else if (file.status == Patch.CHANGED) {
-                             tr.appendChild(EL("td", "line-number"));
-                             tr.appendChild(EL("td", "old-line"));
-                         }
-
-                         if (file.status == Patch.CHANGED)
-                             tr.appendChild(EL("td", "line-middle"));
-
-                         if (newText != null) {
-                             tr.appendChild(EL("td", "line-number", newLine.toString()));
-                             tr.appendChild(EL("td", "new-line " + newStyle,
-                                               newText != "" ? newText : "\u00a0"));
-                             newLine++;
-                         } else if (file.status == Patch.CHANGED) {
-                             tr.appendChild(EL("td", "line-number"));
-                             tr.appendChild(EL("td", "new-line"));
-                         }
-
-                         $(tr).data('patchFile', file);
-                         $(tr).data('patchLocation', loc);
-                         $(tr).dblclick(onRowDblClick);
-
-                         tbody.appendChild(tr);
-
-                         if (line.reviewComments != null)
-                             for (var k = 0; k < line.reviewComments.length; k++) {
-                                 var commentArea = ensureCommentArea(tr);
-                                 addCommentDisplay(commentArea, line.reviewComments[k]);
-                             }
-                     });
+        appendPatchHunk(file, hunk, file.status, true, true, tbody);
     }
+}
+
+function appendReviewComment(comment, parentDiv) {
+    var commentDiv = EL("div", "review-patch-comment");
+    $(commentDiv).click(function() {
+                            showPatchFile(comment.file.patchFile);
+                            if (comment.file.review == theReview) {
+                                // Immediately start editing the comment again
+                                var commentArea = $(comment.div).parents(".comment-area").find("td").get(0);
+                                insertCommentEditor(commentArea,
+                                                    comment.file.patchFile, comment.location, comment.type);
+                                scrollToElement($("#commentEditor").get(0));
+                            } else {
+                                // Just scroll to the comment, don't start a reply yet
+                                scrollToElement(comment.div);
+                            }
+                        });
+
+    var inReplyTo = comment.getInReplyTo();
+    if (inReplyTo) {
+        $("<div>"
+          + "<div class='reviewer-box'>"
+          + "</div>"
+          + "</div>")
+            .addClass(getReviewerClass(inReplyTo.file.review))
+            .find(".reviewer-box").text(inReplyTo.comment).end()
+            .appendTo(commentDiv);
+
+        $("<div class='review-patch-comment-text'></div>")
+            .text(comment.comment)
+            .appendTo(commentDiv);
+    } else {
+        var hunk = comment.getHunk();
+
+        var lastLine = Math.max(hunk.oldStart + hunk.oldCount- 1,
+                                hunk.newStart + hunk.newCount- 1);
+        var tbody = appendPatchTable(comment.type, lastLine, commentDiv);
+
+        appendPatchHunk(comment.file.patchFile, hunk, comment.type, false, false, tbody,
+                        function(loc) {
+                            return (loc <= comment.location && comment.location - loc < 3);
+                        });
+        $("<tr>"
+          + "<td></td>"
+          + "<td class='review-patch-comment-text'></td>"
+          + "</tr>")
+            .find('.review-patch-comment-text').text(comment.comment).end()
+            .appendTo(tbody);
+    }
+
+    parentDiv.appendChild(commentDiv);
+}
+
+function appendReviewComments(review, parentDiv) {
+    for (var i = 0; i < review.files.length; i++) {
+        var file = review.files[i];
+
+        if (file.comments.length == 0)
+            continue;
+
+        parentDiv.appendChild(EL("div", "review-patch-file", file.patchFile.filename));
+        var firstComment = true;
+        for (var j = 0; j < file.comments.length; j++) {
+            if (firstComment)
+                firstComment = false;
+            else
+                parentDiv.appendChild(EL("div", "review-patch-comment-separator"));
+
+            appendReviewComment(file.comments[j], parentDiv);
+        }
+    }
+}
+
+function updateMyPatchComments() {
+    appendReviewComments(theReview, $("#myPatchComments").empty().get(0));
+    if ($("#myPatchComments").children().size() > 0)
+        $("#myPatchComments").show();
+    else
+        $("#myPatchComments").hide();
 }
 
 function selectNavigationLink(identifier) {
@@ -738,7 +836,7 @@ function start(xml) {
                 reviewers[review.who] = reviewerIndex;
             }
 
-            $("<div class='review'>"
+            var q = $("<div class='review'>"
               + "<div class='reviewer-box'>"
               + "<div class='reviewer'></div><div class='review-date'></div>"
               + "<div class='review-info-bottom'></div>"
@@ -751,6 +849,9 @@ function start(xml) {
                 .find(".review-intro").text(review.intro? review.intro : "").end()
                 .appendTo("#oldReviews");
 
+            $("#oldReviews").show();
+
+            appendReviewComments(review, q.find('.reviewer-box').get(0));
         }
     }
 
@@ -789,6 +890,8 @@ function start(xml) {
                       queueSaveDraft();
                       queueUpdateHaveDraft();
                   });
+
+    updateMyPatchComments();
 
     queueUpdateHaveDraft();
 

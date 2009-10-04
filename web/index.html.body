@@ -30,16 +30,20 @@
 <div id="overview" style="display: none;">
   <div id="patchIntro">
   </div>
-  <div id="oldReviews">
-  </div>
-  <div id="restored" style="display: none;">
-    Restored from draft; last edited <span id="restoredLastModified"></span>
+  <div>
+    <span class="review-title">
+      Your Review
+    </span>
+    <span id="restored" style="display: none;">
+      (Restored from draft; last edited <span id="restoredLastModified"></span>)
+    </span>
   </div>
   <div>
     <div id="myCommentFrame">
       <textarea id="myComment"></textarea>
       <div id="emptyCommentNotice">&lt;Overall Comment&gt;</div>
     </div>
+    <div id="myPatchComments"></div>
     <div id="buttonBox">
       <span id="attachmentStatusSpan">Patch Status:
 	<select id="attachmentStatus"> </select>
@@ -48,6 +52,11 @@
       <input id="cancelButton" type="button" value="Cancel" />
     </div>
     <div class="clear"></div>
+  </div>
+  <div id="oldReviews" style="display: none;">
+    <div class="review-title">
+      Previous Reviews
+    </div>
   </div>
 </div>
 <div id="files" style="display: none;"></div>
