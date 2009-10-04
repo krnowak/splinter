@@ -1,7 +1,7 @@
 <div id="error" style="display: none;"> </div>
 <div id="navigation" style="display: none;"></div>
 <div id="bugInfo" style="display: none;">
-  <a id="bugLink">Bug <span id="bugId"></span></a> -
+  Bug <span id="bugId"></span> -
   <span id="bugShortDesc"></span> -
   <span id="bugReporter"></span> -
   <span id="bugCreationDate"></span>

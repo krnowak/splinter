@@ -612,13 +612,11 @@ function addPatchFile(file) {
 }
 
 function showOverview() {
-    $("#bugInfo").show();
     $("#overview").show();
     $(".file").hide();
 }
 
 function showPatchFile(file) {
-    $("#bugInfo").hide();
     $("#overview").hide();
     $(".file").hide();
     if (file.div)
@@ -666,18 +664,17 @@ function start(xml) {
     $("#overview").show();
     $("#files").show();
 
-    $("#bugLink")
-        .click(flushSaveDraft)
-        .attr('href', newPageUrl(theBug.id));
-
     $("#subtitle").text("Attachment " + theAttachment.id + " - " + theAttachment.description);
-    $("#information").text(Utils.formatDate(theAttachment.date));
+    $("<a></a>")
+        .text("Bug " + theBug.id)
+        .attr('href', newPageUrl(theBug.id))
+        .attr('title', theBug.shortDesc)
+        .click(flushSaveDraft)
+        .appendTo("#information");
 
     for (i = 0; i < configAttachmentStatuses.length; i++) {
-        $("<option></option")
-            .text(configAttachmentStatuses[i])
-            .appendTo($("#attachmentStatus"));
-    }
+        $("<option></option") .text(configAttachmentStatuses[i])
+        .appendTo($("#attachmentStatus")); }
 
     if (theAttachment.status != null)
         $("#attachmentStatus").val(theAttachment.status);
@@ -763,13 +760,7 @@ function start(xml) {
 function gotBug(xml) {
     theBug = Bug.Bug.fromDOM(xml);
 
-    $("#bugInfo").show();
     showNote();
-
-    $("#bugId").text(theBug.id);
-    $("#bugShortDesc").text(theBug.shortDesc);
-    $("#bugReporter").text(theBug.getReporter());
-    $("#bugCreationDate").text(Utils.formatDate(theBug.creationDate));
 
     if (attachmentId != null) {
         theAttachment = theBug.getAttachment(attachmentId);
@@ -864,6 +855,13 @@ function showEnterBug() {
 }
 
 function showChooseAttachment() {
+    $("#bugId").text(theBug.id);
+    $("#bugShortDesc").text(theBug.shortDesc);
+    $("#bugReporter").text(theBug.getReporter());
+    $("#bugCreationDate").text(Utils.formatDate(theBug.creationDate));
+
+    $("#bugInfo").show();
+
     document.title = "Bug " + theBug.id + " - " + theBug.shortDesc + " - Patch Review";
     $("#originalBugLink").attr('href', configBugzillaUrl + "/show_bug.cgi?id=" + theBug.id);
 
