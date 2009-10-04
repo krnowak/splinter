@@ -759,8 +759,18 @@ function start(xml) {
     if (!theReview)
         theReview = new Review.Review(thePatch);
 
+    if (theReview.intro)
+        $("#emptyCommentNotice").hide();
+
     $("#myComment")
         .val(theReview.intro)
+        .focus(function() {
+                   $("#emptyCommentNotice").hide();
+               })
+        .blur(function() {
+                  if ($(this).val().search(/\S/) < 0)
+                      $("#emptyCommentNotice").show();
+              })
         .keypress(function() {
                       queueSaveDraft();
                       queueUpdateHaveDraft();

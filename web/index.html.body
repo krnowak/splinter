@@ -36,9 +36,9 @@
     Restored from draft; last edited <span id="restoredLastModified"></span>
   </div>
   <div>
-    <div>Overall Comment:</div>
-    <textarea id="myComment"></textarea>
-    <div>
+    <div id="myCommentFrame">
+      <textarea id="myComment"></textarea>
+      <div id="emptyCommentNotice">&lt;Overall Comment&gt;</div>
     </div>
     <div id="buttonBox">
       <span id="attachmentStatusSpan">Patch Status:
