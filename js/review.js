@@ -27,6 +27,20 @@ Comment.prototype = {
         return this.file.patchFile.getHunk(this.location);
     },
 
+    getInReplyTo : function() {
+        var hunk = this.getHunk();
+        var line = hunk.lines[this.location - hunk.location];
+        for (var i = 0; i < line.reviewComments.length; i++) {
+            var comment = line.reviewComments[0];
+            if (comment === this)
+                return null;
+            if (comment.type == this.type)
+                return comment;
+        }
+
+        return null;
+    },
+
     remove : function() {
         var hunk = this.getHunk();
         var line = hunk.lines[this.location - hunk.location];
