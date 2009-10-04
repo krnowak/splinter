@@ -14,6 +14,8 @@ var theReview;
 
 var reviewers = {};
 
+var navigationLinks = {};
+
 var updateHaveDraftTimeoutId;
 var saveDraftTimeoutId;
 var saveDraftNoticeTimeoutId;
@@ -611,21 +613,12 @@ function addPatchFile(file) {
     }
 }
 
-function showOverview() {
-    $("#overview").show();
-    $(".file").hide();
+function selectNavigationLink(identifier) {
+    $(".navigation-link").removeClass("navigation-link-selected");
+    $(navigationLinks[identifier]).addClass("navigation-link-selected");
 }
 
-function showPatchFile(file) {
-    $("#overview").hide();
-    $(".file").hide();
-    if (file.div)
-        $(file.div).show();
-    else
-        addPatchFile(file);
-}
-
-function addNavigationLink(title, callback, selected) {
+function addNavigationLink(identifier, title, callback, selected) {
     if ($("#navigation").children().size() > 0)
         $("#navigation").append(" | ");
 
@@ -634,19 +627,40 @@ function addNavigationLink(title, callback, selected) {
         .appendTo("#navigation")
         .click(function() {
                    if (!$(this).hasClass("navigation-link-selected")) {
-                       $(".navigation-link").removeClass("navigation-link-selected");
-                       $(this).addClass("navigation-link-selected");
                        callback();
                    }
                });
 
     if (selected)
         q.addClass("navigation-link-selected");
+
+    navigationLinks[identifier] = q.get(0);
+}
+
+function showOverview() {
+    selectNavigationLink('__OVERVIEW__');
+    $("#overview").show();
+    $(".file").hide();
+    updateMyPatchComments();
+}
+
+function addOverviewNavigationLink() {
+    addNavigationLink('__OVERVIEW__', "Overview", showOverview, true);
+}
+
+function showPatchFile(file) {
+    selectNavigationLink(file.filename);
+    $("#overview").hide();
+    $(".file").hide();
+    if (file.div)
+        $(file.div).show();
+    else
+        addPatchFile(file);
 }
 
 function addFileNavigationLink(file) {
     var basename = file.filename.replace(/.*\//, "");
-    addNavigationLink(basename, function() {
+    addNavigationLink(file.filename, basename, function() {
         showPatchFile(file);
     });
 }
@@ -686,7 +700,7 @@ function start(xml) {
     else
         $("#patchIntro").hide();
 
-    addNavigationLink("Overview", showOverview, true);
+    addOverviewNavigationLink();
     for (i = 0; i < thePatch.files.length; i++)
         addFileNavigationLink(thePatch.files[i]);
 
