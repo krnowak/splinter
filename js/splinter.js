@@ -474,17 +474,31 @@ function EL(element, cls, text) {
     return e;
 }
 
+function getElementPosition(element) {
+    var left = element.offsetLeft;
+    var top = element.offsetTop;
+    var parent = element.offsetParent;
+    while (parent != document.body) {
+        left += parent.offsetLeft;
+        top += parent.offsetTop;
+        parent = parent.offsetParent;
+    }
+
+    return [left, top];
+}
+
+function scrollToElement(element) {
+    var pos = getElementPosition(element);
+    var yCenter = pos[1] + element.offsetHeight / 2;
+    window.scrollTo(0, yCenter - window.innerHeight / 2);
+}
+
 function onRowDblClick(e) {
     var file = $(this).data('patchFile');
 
     if (file.status == Patch.CHANGED) {
-        var leftX = this.offsetLeft;
-        var parent = this.offsetParent;
-        while (parent != document.body) {
-            leftX += parent.offsetLeft;
-            parent = parent.offsetParent;
-        }
-        var delta = e.pageX - (leftX + this.offsetWidth/2);
+        var pos = getElementPosition(this);
+        var delta = e.pageX - (pos[0] + this.offsetWidth/2);
         var type;
         if (delta < - 20)
         type = Patch.REMOVED;
