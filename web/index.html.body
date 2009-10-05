@@ -26,6 +26,7 @@
     </tbody>
   </table>
   <a id="originalBugLink">Go to bug</a>
+  <a id="allReviewsLink">Your reviews</a>
 </div>
 <div id="overview" style="display: none;">
   <div id="patchIntro">
