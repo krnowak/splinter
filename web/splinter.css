@@ -398,6 +398,12 @@ div.review-patch-comment-text {
     right: 0px;
 }
 
+#credits {
+    font-size: 80%;
+    color: #888888;
+    text-align: center;
+}
+
 /* dialog.js */
 
 #modalContainer {

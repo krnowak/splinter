@@ -401,6 +401,7 @@ configAttachmentStatuses = [
 configBase = 'index.html';
 configBugzillaUrl = '%(bugzilla_url)s';
 configHaveExtension = %(have_extension)s;
+configHelp = 'help.html';
 configNote = '%(note)s';
 """ % {
         'bugzilla_url': current_config['bugzilla_url'],

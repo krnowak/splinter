@@ -38,6 +38,7 @@
   $(function() { init(); });
   configBugzillaUrl = '/';
   configHaveExtension = true;
+  configHelp = "/extensions/splinter/web/help.html";
   configNote = '';
 </script>
 

@@ -27,12 +27,18 @@ var currentEditComment;
 const ADD_COMMENT_SUCCESS = /<title>\s*Bug[\S\s]*processed\s*<\/title>/;
 const UPDATE_ATTACHMENT_SUCCESS = /<title>\s*Changes\s+Submitted/;
 
+function doneLoading() {
+    $("#loading").hide();
+    $("#helpLink").attr("href", configHelp);
+    $("#credits").show();
+}
+
 function displayError(msg) {
     $("<p></p>")
         .text(msg)
         .appendTo("#error");
     $("#error").show();
-    $("#loading").hide();
+    doneLoad();
 }
 
 function updateAttachmentStatus(attachment, newStatus, success, failure) {
@@ -818,7 +824,7 @@ function start(xml) {
 
     document.title = "Attachment " + theAttachment.id + " - " + theAttachment.description + " - Patch Review";
 
-    $("#loading").hide();
+    doneLoading();
     $("#attachmentInfo").show();
     $("#navigation").show();
     $("#overview").show();
@@ -992,7 +998,7 @@ function showEnterBug() {
                                var newBugId = Utils.strip($("#enterBugInput").val());
                                document.location = newPageUrl(newBugId);
                            });
-    $("#loading").hide();
+    doneLoading();
     $("#enterBug").show();
 
     if (!reviewStorage)
@@ -1042,6 +1048,8 @@ function showChooseAttachment() {
 
     document.title = "Bug " + theBug.id + " - " + theBug.shortDesc + " - Patch Review";
     $("#originalBugLink").attr('href', configBugzillaUrl + "/show_bug.cgi?id=" + theBug.id);
+
+    $("#allReviewsLink").attr('href', configBase);
 
     var drafts = {};
     var published = {};
@@ -1099,7 +1107,7 @@ function showChooseAttachment() {
             .appendTo("#chooseAttachment tbody");
     }
 
-    $("#loading").hide();
+    doneLoading();
     $("#chooseAttachment").show();
 }
 

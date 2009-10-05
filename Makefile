@@ -33,6 +33,7 @@ CLEAN_FILES =					\
 	web/splinter.flat.js
 
 WEB_FILES =					\
+	web/help.html				\
 	web/index.html				\
 	web/jquery.min.js			\
 	web/splinter.css			\

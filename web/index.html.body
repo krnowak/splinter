@@ -61,4 +61,8 @@
   </div>
 </div>
 <div id="files" style="display: none;"></div>
+<div id="credits" style="display: none;">
+  Powered by <a href="http://fishsoup.net/software/splinter">Splinter</a> |
+  <a id='helpLink' target='splinterHelp'>Help</a>
+</div>
 <div id="saveDraftNotice" style="display: none;"></div>
