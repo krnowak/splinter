@@ -200,8 +200,11 @@ function _handleSuccess(options, xml) {
             throw new ParseError("Bad content of <methodResponse/>");
         }
 
-    } catch (e if e instanceof ParseError) {
-        options.error(e.message);
+    } catch (e) {
+        if (e instanceof ParseError)
+            options.error(e.message);
+        else
+            throw e;
     }
 }
 
