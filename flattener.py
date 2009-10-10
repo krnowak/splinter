@@ -11,9 +11,9 @@ r"""
 \s*
 (?:^
 include\s*\(\s*\'([^\']+)\'\s*\)\s*; |
-(?:function\s+(\w+)\s*     (\(.*;|%(c)s^\})) |
-(?:(\w+)\.(\w+)\s*=\s*       (.*;|%(c)s^[\]\}];)) |
-(?:(?:const|let|var)\s+(\w+) (.*;|%(c)s^[\]\}];)) |
+(?:function\s+(\w+)\s*           (\(.*;|%(c)s^\})) |
+(?:(\w+)\.(\w+(?:\.\w+)*)\s*=\s* (.*;|%(c)s^[\]\}];)) |
+(?:(?:const|let|var)\s+(\w+)     (.*;|%(c)s^[\]\}];)) |
 /\*(?:[^*]+|\*[^/])*\*/ |
 //.*
 [ \t]*\n)
@@ -90,7 +90,7 @@ if (!console) {
                     add_local(m.group(2))
                     print >>self.outf, "%s.%s = function%s;" % (namespace, m.group(2), substitute_locals(m.group(3)))
             elif m.group(4) is not None:
-                if namespace is None:
+                if m.group(4) == "jQuery" or namespace is None:
                     print >>self.outf, "%s.%s = %s" % (m.group(4), m.group(5), m.group(6))
                 else:
                     print >>self.outf, "%s.%s.%s = %s" % (namespace, m.group(4), m.group(5), substitute_locals(m.group(6)))
