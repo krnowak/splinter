@@ -556,18 +556,19 @@ function onRowDblClick(e) {
 }
 
 function appendPatchTable(type, maxLine, parentDiv) {
-    var q = $("<table class='file-table'>"
+    var q = $("<table class='file-table'><colgroup></colgroup>"
               + "</table>").appendTo(parentDiv);
+    var colQ = q.find("colgroup");
     if (type != Patch.ADDED) {
-        q.append("<col class='line-number-column'></col>");
-        q.append("<col class='old-column'></col>");
+        colQ.append("<col class='line-number-column' span='1'></col>");
+        colQ.append("<col class='old-column' span='1'></col>");
     }
     if (type == Patch.CHANGED) {
-        q.append("<col class='middle-column'></col>");
+        colQ.append("<col class='middle-column' span='1'></col>");
     }
     if (type != Patch.REMOVED) {
-        q.append("<col class='line-number-column'></col>");
-        q.append("<col class='new-column'></col>");
+        colQ.append("<col class='line-number-column' span='1'></col>");
+        colQ.append("<col class='new-column' span='1'></col");
     }
 
     if (type == Patch.CHANGED)
