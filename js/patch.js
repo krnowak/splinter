@@ -96,7 +96,7 @@ Hunk.prototype = {
 
         for (var i = 0; i < rawlines.length; i++) {
             var line = rawlines[i];
-            var op = line[0];
+            var op = line.substr(0, 1);
             var strippedLine = line.substring(1);
             var noNewLine = 0;
             if (i + 1 < rawlines.length && rawlines[i + 1].substr(0, 1) == '\\') {
@@ -139,7 +139,7 @@ Hunk.prototype = {
         // generically stripping excess lines to be kind to hand-edited patches
         if (totalOld > oldCount &&
             lines[lines.length - 1][1] == null &&
-            lines[lines.length - 1][0][0] == '-')
+            lines[lines.length - 1][0].substr(0, 1) == '-')
         {
             lines.pop();
             currentOldCount--;
