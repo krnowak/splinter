@@ -190,11 +190,11 @@ File.prototype = {
             var hunk = this.hunks[i];
             if (oldLine != null && hunk.oldStart > oldLine)
                 continue;
-            if (newLine != null && hunk.oldStart > newLine)
+            if (newLine != null && hunk.newStart > newLine)
                 continue;
 
             if ((oldLine != null && oldLine < hunk.oldStart + hunk.oldCount) ||
-                newLine != null && newLine < hunk.newStart + hunk.newCount) {
+                (newLine != null && newLine < hunk.newStart + hunk.newCount)) {
                 var location = -1;
                 hunk.iterate(function(loc, oldl, oldText, newl, newText, flags) {
                                  if ((oldLine == null || oldl == oldLine) &&
