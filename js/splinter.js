@@ -775,7 +775,7 @@ function addNavigationLink(identifier, title, callback, selected) {
     if ($("#navigation").children().size() > 0)
         $("#navigation").append(" | ");
 
-    var q = $("<a class='navigation-link' href='javascript:void(0)'></a")
+    var q = $("<a class='navigation-link' href='javascript:void(0)'></a>")
         .text(title)
         .appendTo("#navigation")
         .click(function() {
