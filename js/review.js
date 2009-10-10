@@ -331,14 +331,14 @@ Review.prototype = {
                 pos = HUNK_RE.lastIndex;
 
                 var oldStart, oldCount, newStart, newCount;
-                if (m2[1] != null) {
+                if (m2[1]) {
                     oldStart = parseInt(m2[1]);
                     oldCount = parseInt(m2[2]);
                 } else {
                     oldStart = oldCount = null;
                 }
 
-                if (m2[3] != null) {
+                if (m2[3]) {
                     newStart = parseInt(m2[3]);
                     newCount = parseInt(m2[4]);
                 } else {
