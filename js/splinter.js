@@ -921,7 +921,7 @@ function start(xml) {
         $("#emptyCommentNotice").hide();
 
     $("#myComment")
-        .val(theReview.intro)
+        .val(theReview.intro ? theReview.intro : "")
         .focus(function() {
                    $("#emptyCommentNotice").hide();
                })
