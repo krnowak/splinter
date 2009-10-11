@@ -38,7 +38,7 @@ function displayError(msg) {
         .text(msg)
         .appendTo("#error");
     $("#error").show();
-    doneLoad();
+    doneLoading();
 }
 
 function updateAttachmentStatus(attachment, newStatus, success, failure) {
