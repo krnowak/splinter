@@ -1,3 +1,9 @@
+<!--[if lt IE 7]>
+<p style="border: 1px solid #880000; padding: 1em; background: #ffee88; font-size: 120%;">
+   Splinter Patch Review requires a modern browser, such as
+   <a href="http://www.firefox.com">Firefox</a>, for correct operation.
+</p>
+<![endif]-->
 <div id="error" style="display: none;"> </div>
 <div id="navigation" style="display: none;"></div>
 <div id="bugInfo" style="display: none;">
