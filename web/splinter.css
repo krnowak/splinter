@@ -100,14 +100,11 @@ textarea:focus {
     border: 1px solid #888888;
     font-size: 90%;
     margin-bottom: 1em;
-    white-space: pre;
     padding: 0.5em;
 }
 
-
 .reviewer-box {
     padding: 0.5em;
-    white-space: pre-wrap;
 }
 
 .reviewer-0 .reviewer-box {
@@ -168,7 +165,6 @@ textarea:focus {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     cursor: pointer;
-    white-space: pre-wrap;
 }
 
 .review-patch-comment:hover {
@@ -237,6 +233,16 @@ div.review-patch-comment-text {
 
 .clear {
     clear: both;
+}
+
+/* Used for IE <= 7, overridden for modern browsers */
+.pre-wrap {
+    white-space: pre;
+    word-wrap: break-word;
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
 }
 
 #files {

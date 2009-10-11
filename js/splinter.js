@@ -361,7 +361,7 @@ function addCommentDisplay(commentArea, comment) {
       + "</div>"
       + "</div>"
       + "</div>")
-        .find(".comment-text").text(comment.comment).end()
+        .find(".comment-text").preWrapLines(comment.comment).end()
         .addClass(getTypeClass(comment.type))
         .addClass(getReviewerClass(review))
         .appendTo(commentArea)
@@ -714,7 +714,7 @@ function appendReviewComment(comment, parentDiv) {
             .appendTo(commentDiv);
 
         $("<div class='review-patch-comment-text'></div>")
-            .text(comment.comment)
+            .preWrapLines(comment.comment)
             .appendTo(commentDiv);
     } else {
         var hunk = comment.getHunk();
@@ -731,7 +731,7 @@ function appendReviewComment(comment, parentDiv) {
           + "<td></td>"
           + "<td class='review-patch-comment-text'></td>"
           + "</tr>")
-            .find('.review-patch-comment-text').text(comment.comment).end()
+            .find('.review-patch-comment-text').preWrapLines(comment.comment).end()
             .appendTo(tbody);
     }
 
@@ -851,7 +851,7 @@ function start(xml) {
         $("#attachmentStatusSpan").hide();
 
     if (thePatch.intro)
-        $("#patchIntro").text(thePatch.intro);
+        $("#patchIntro").preWrapLines(thePatch.intro);
     else
         $("#patchIntro").hide();
 
@@ -1111,6 +1111,25 @@ function showChooseAttachment() {
     doneLoading();
     $("#chooseAttachment").show();
 }
+
+
+// This is basically a workaround for IE which doesn't treat \n as a
+// line-break in white-space: pre, but only \r\n; we could normalize
+// line endings, but we take an alternate approach of just putting
+// each line into a separate div. We omit a trailing empty line
+// after the last line break.
+const LINE_RE = /(?!$)([^\r\n]*)(?:\r\n|\r|\n|$)/g;
+
+jQuery.fn.preWrapLines = function(text) {
+    return this.each(function() {
+        while ((m = LINE_RE.exec(text)) != null) {
+            var div = document.createElement("div");
+            div.className = "pre-wrap";
+            div.appendChild(document.createTextNode(m[1].length == 0 ? " " : m[1]));
+            this.appendChild(div);
+        }
+    });
+};
 
 function init() {
     var params = getQueryParams();
