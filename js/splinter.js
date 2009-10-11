@@ -520,7 +520,7 @@ function getElementPosition(element) {
     var left = element.offsetLeft;
     var top = element.offsetTop;
     var parent = element.offsetParent;
-    while (parent != document.body) {
+    while (parent && parent != document.body) {
         left += parent.offsetLeft;
         top += parent.offsetTop;
         parent = parent.offsetParent;
@@ -530,9 +530,14 @@ function getElementPosition(element) {
 }
 
 function scrollToElement(element) {
+    var windowHeight;
+    if ('innerHeight' in window) // Not IE
+        windowHeight = window.innerHeight;
+    else // IE
+        windowHeight = document.documentElement.clientHeight;
     var pos = getElementPosition(element);
     var yCenter = pos[1] + element.offsetHeight / 2;
-    window.scrollTo(0, yCenter - window.innerHeight / 2);
+    window.scrollTo(0, yCenter - windowHeight / 2);
 }
 
 function onRowDblClick(e) {
