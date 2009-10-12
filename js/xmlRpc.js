@@ -227,7 +227,7 @@ function call(options) {
     $.ajax({
                type: 'POST',
                url: options.url,
-               ontentType: 'text/xml',
+               contentType: 'text/xml',
                dataType: 'xml',
                data: (new XMLSerializer()).serializeToString(doc),
                error: function(xmlHttpRequest, textStatus, errorThrown) {
