@@ -1,0 +1,21 @@
+<Project xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"
+         xmlns:gnome="http://api.gnome.org/doap-extensions#"
+         xmlns="http://usefulinc.com/ns/doap#">
+
+  <name xml:lang="en">Splinter</name>
+  <shortdesc xml:lang="en">Patch review add-on for Bugzilla</shortdesc>
+  <homepage rdf:resource="http://fishsoup.net/software/splinter" />
+  <bug-database rdf:resource="http://bugzilla.gnome.org/browse.cgi?product=splinter" />
+
+  <category rdf:resource="http://api.gnome.org/doap-extensions#infrastructure" />
+
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Owen Taylor</foaf:name>
+      <foaf:mbox rdf:resource="mailto:otaylor@fishsoup.net" />
+      <gnome:userid>otaylor</gnome:userid>
+    </foaf:Person>
+  </maintainer>
+</Project>
