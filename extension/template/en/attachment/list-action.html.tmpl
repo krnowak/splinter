@@ -21,8 +21,8 @@
 [% IF attachment.ispatch %]
 &#x0020; |
   [% IF Param("splinter_base").search('\?') %]
-    <a href='[% Param("splinter_base") %]&bug=[% bugid %]&attachment=[% attachment.id %]'>Review</a>
+    <a href='[% Param("splinter_base") FILTER html %]&amp;bug=[% bugid %]&amp;attachment=[% attachment.id %]'>Review</a>
   [% ELSE %]
-    <a href='[% Param("splinter_base") %]?bug=[% bugid %]&attachment=[% attachment.id %]'>Review</a>
+    <a href='[% Param("splinter_base") FILTER html %]?bug=[% bugid %]&amp;attachment=[% attachment.id %]'>Review</a>
   [% END %]
 [% END %]
