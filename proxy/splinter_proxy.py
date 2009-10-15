@@ -84,10 +84,12 @@ def get_proxy_info(path):
         portstr = ""
     port = port_from_scheme(split.scheme, split.port)
 
-    url = "%s://%s%s%s" % (split.scheme, split.hostname,
-                           portstr, split.path + path)
+    proxy_path = split.path + path[1:] # Chop leading / off of path
 
-    return split.scheme, split.hostname, port, split.path + path, url
+    url = "%s://%s%s%s" % (split.scheme, split.hostname,
+                           portstr, proxy_path)
+
+    return split.scheme, split.hostname, port, proxy_path, url
 
 # Without the mixin, HTTPServer is single-connection-at-a-time
 class ProxyServer(HTTPServer, ForkingMixIn):
@@ -482,6 +484,10 @@ if not config_name in config.configs:
     sys.exit(1)
 
 current_config = config.configs[config_name]
+# Simpler to normalize here than to require the config to have
+# a particular form
+if not current_config['bugzilla_url'].endswith('/'):
+    current_config['bugzilla_url'] += '/'
 
 proxy_scheme, proxy_hostname, proxy_port, proxy_path, proxy_url = get_proxy_info("/xmlrpc.cgi")
 transport = LoginTransport(proxy_scheme, proxy_hostname, proxy_port)

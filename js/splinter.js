@@ -1053,7 +1053,7 @@ function showChooseAttachment() {
     $("#bugInfo").show();
 
     document.title = "Bug " + theBug.id + " - " + theBug.shortDesc + " - Patch Review";
-    $("#originalBugLink").attr('href', configBugzillaUrl + "/show_bug.cgi?id=" + theBug.id);
+    $("#originalBugLink").attr('href', configBugzillaUrl + "show_bug.cgi?id=" + theBug.id);
 
     $("#allReviewsLink").attr('href', configBase);
 
