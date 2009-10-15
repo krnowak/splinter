@@ -715,7 +715,7 @@ function appendReviewComment(comment, parentDiv) {
           + "</div>"
           + "</div>")
             .addClass(getReviewerClass(inReplyTo.file.review))
-            .find(".reviewer-box").text(inReplyTo.comment).end()
+            .find(".reviewer-box").preWrapLines(inReplyTo.comment).end()
             .appendTo(commentDiv);
 
         $("<div class='review-patch-comment-text'></div>")
@@ -894,7 +894,7 @@ function start(xml) {
                 .addClass(getReviewerClass(review))
                 .find(".reviewer").text(review.who).end()
                 .find(".review-date").text(Utils.formatDate(review.date)).end()
-                .find(".review-intro").text(review.intro? review.intro : "").end()
+                .find(".review-intro").preWrapLines(review.intro? review.intro : "").end()
                 .appendTo("#oldReviews");
 
             $("#oldReviews").show();
