@@ -27,6 +27,8 @@ use Bugzilla::Constants;
 use Bugzilla::Field;
 use Bugzilla::Util qw(trim);
 
+use extensions::splinter::lib::SplinterUtil;
+
 use base qw(Bugzilla::WebService);
 
 sub info {
@@ -48,15 +50,11 @@ sub info {
 }
 
 # Make sure the current user has access to the specified attachment;
-# cut and paste from attachmnet.cgi
+# Based on cut-and-paste from attachment.cgi
 sub check_can_access {
     my $attachment = shift;
-    my $user = Bugzilla->user;
 
-    # Make sure the user is authorized to access this attachment's bug.
-    Bugzilla::Bug->check($attachment->bug_id);
-    if ($attachment->isprivate && $user->id != $attachment->attacher->id 
-        && !$user->is_insider) 
+    if (!attachment_is_visible ($attachment))
     {
         ThrowUserError('auth_failure', {action => 'access',
                                         object => 'attachment'});

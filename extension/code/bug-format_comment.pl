@@ -24,21 +24,33 @@ use warnings;
 use Bugzilla;
 use Bugzilla::Template;
 
-my $REVIEW_RE = qr/Review\s+of\s+attachment\s+(\d+)\s*:/;
+use extensions::splinter::lib::SplinterUtil;
 
 my $bug = Bugzilla->hook_args->{'bug'};
 my $regexes = Bugzilla->hook_args->{'regexes'};
 my $text = Bugzilla->hook_args->{'text'};
 
+# Add [review] link to the end of "Created an attachment" comments
+#
+# We need to work around the way that the hook works, which is intended
+# to avoid overlapping matches, since we *want* an overlapping match
+# here (the normal handling of "Created an attachment"), so we add in
+# dummy text and then replace in the regular expression we return from
+# the hook.
+$$text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\)(\s\[edit\])?)
+           ~(push(@$regexes, { match => qr/__REVIEW__$2/,
+                               replace => get_review_link($bug, "$2", "[review]") })) &&
+            (attachment_id_is_patch($2) ? "$1 __REVIEW__$2" : $1)
+           ~egmx;
+
+# And linkify "Review of attachment", this is less of a workaround since
+# there is no issue with overlap; note that there is an assumption that
+# there is only one match in the text we are linkifying, since they all
+# get the same link.
+my $REVIEW_RE = qr/Review\s+of\s+attachment\s+(\d+)\s*:/;
+
 if ($$text =~ $REVIEW_RE) {
-    my $base = Bugzilla->params->{'splinter_base'};
-    my $bug_id = $bug->id;
-    my $review_link;
-    if ($base =~ /\?/) {
-        $review_link = "<a href='$base&bug=$bug_id&attachment=$1'>Review</a>";
-    } else {
-        $review_link = "<a href='$base?bug=$bug_id&attachment=$1'>Review</a>";
-    }
+    my $review_link = get_review_link($bug, $1, "Review");
     my $attach_link = Bugzilla::Template::get_attachment_link($1, "attachment $1");
 
     push(@$regexes, { match => $REVIEW_RE,

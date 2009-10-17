@@ -46,6 +46,7 @@ EXTENSION_FILES =							\
 	extension/code/webservice.pl					\
 	extension/info.pl						\
 	extension/lib/ConfigSplinter.pm					\
+	extension/lib/SplinterUtil.pm					\
 	extension/lib/WSSplinter.pm					\
 	extension/template/en/attachment/list-action.html.tmpl		\
 	extension/template/en/default/admin/params/splinter.html.tmpl	\
