@@ -26,7 +26,8 @@ use Bugzilla::Util;
 
 use base qw(Exporter);
 @extensions::splinter::lib::SplinterUtil::EXPORT = qw(attachment_is_visible attachment_id_is_patch
-                                                      get_review_url get_review_link);
+                                                      get_review_url get_review_link
+                                                      add_review_links_to_email);
 
 # Checks if the current user can see an attachment
 # Based on code from attachment.cgi
@@ -74,4 +75,54 @@ sub get_review_url {
 sub get_review_link {
     my ($bug, $attach_id, $link_text) = @_;
     return "<a href='" . html_quote(get_review_url($bug, $attach_id)) . "'>$link_text</a>";
+}
+
+sub munge_create_attachment {
+    my ($bug, $intro_text, $attach_id, $view_link) = @_;
+
+    if (attachment_id_is_patch ($attach_id)) {
+	return ("$intro_text" .
+                " View: $view_link\015\012" .
+                " Review: " . get_review_url($bug, $attach_id, 1) . "\015\012");
+    } else {
+	return ("$intro_text" .
+                " --> ($view_link)");
+    }
+}
+
+# This adds review links into a bug mail before we send it out.
+# Since this is happening after newlines have been converted into
+# RFC-2822 style \r\n, we need handle line ends carefully.
+# (\015 and \012 are used because Perl \n is platform-dependent)
+sub add_review_links_to_email {
+    my $email = shift;
+
+    my $body = $email->body;
+    my $new_body = 0;
+
+    my $bug;
+    if ($email->header('Subject') =~ /^\[Bug\s+(\d+)\]/ &&
+        Bugzilla->user->can_see_bug($1))
+    {
+	$bug = new Bugzilla::Bug($1);
+    }
+
+    return unless defined $bug;
+
+    if ($body =~ /Review\s+of\s+attachment\s+\d+\s*:/) {
+	$body =~ s~(Review\s+of\s+attachment\s+(\d+)\s*:)
+                  ~"$1\015\012 --> (" . get_review_url($bug, $2, 1) . ")"
+                  ~egx;
+	$new_body = 1;
+    }
+
+    if ($body =~ /Created an attachment \(id=[0-9]+\)\015\012 --> /) {
+	$body =~ s~(Created\ an\ attachment\ \(id=([0-9]+)\)\015\012)
+                   \ -->\ \(([^\015\012]*)\)[^\015\012]*
+                  ~munge_create_attachment($bug, $1, $2, $3)
+                  ~egx;
+	$new_body = 1;
+    }
+
+    $email->body_set($body) if $new_body;
 }

@@ -42,6 +42,7 @@ WEB_FILES =					\
 EXTENSION_FILES =							\
 	extension/code/bug-format_comment.pl				\
 	extension/code/config-add_panels.pl				\
+	extension/code/mailer-before_send.pl				\
 	extension/code/page-before_template.pl				\
 	extension/code/webservice.pl					\
 	extension/info.pl						\
