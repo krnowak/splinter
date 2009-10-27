@@ -185,8 +185,9 @@ File.prototype = {
             // Sort them into global order ' ', '-', '+'
             patchLines.sort(_compareSegmentLines);
 
-            // Completely blank context isn't useful so remove it
-            while (patchLines[0].match(/^\s*$/)) {
+            // Completely blank context isn't useful so remove it; however if we are commenting
+            // on blank lines at the start of a segment, we have to leave something or things break
+            while (patchLines.length > 1 && patchLines[0].match(/^\s*$/)) {
                 patchLines.shift();
                 patchOldStart++;
                 patchNewStart++;
