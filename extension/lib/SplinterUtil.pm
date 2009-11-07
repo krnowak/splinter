@@ -36,8 +36,8 @@ sub attachment_is_visible {
 
     return (Bugzilla->user->can_see_bug($attachment->bug->id) &&
             (!$attachment->isprivate ||
-             $user->id == $attachment->attacher->id ||
-             $user->is_insider));
+             Bugzilla->user->id == $attachment->attacher->id ||
+             Bugzilla->user->is_insider));
 }
 
 sub attachment_id_is_patch {
