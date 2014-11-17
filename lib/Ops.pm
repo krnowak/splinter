@@ -57,8 +57,9 @@ sub format_the_comment {
     # there is only one match in the text we are linkifying, since they all
     # get the same link.
     if (${$text} =~ $REVIEW_RE) {
-        my $review_link = get_review_link($bug, $1, "Review");
-        my $attach_link = Bugzilla::Template::get_attachment_link($1, "attachment $1");
+        my $attachment_id = $1;
+        my $review_link = get_review_link($bug, $attachment_id, "Review");
+        my $attach_link = Bugzilla::Template::get_attachment_link($attachment_id, "attachment $attachment_id");
 
         push(@$regexes, { 'match' => $REVIEW_RE,
                           'replace' => "$review_link of $attach_link:"});
