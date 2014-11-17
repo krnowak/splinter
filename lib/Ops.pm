@@ -28,11 +28,50 @@ use base qw(Exporter);
 our @EXPORT = qw(
     format_the_comment
     add_panel
+    add_review_links_to_email
     maybe_get_statuses
     add_dispatch
 );
 
 use Bugzilla::Extension::Splinter::SplinterUtil;
+
+sub _attachment_id_is_patch {
+    my ($attach_id) = @_;
+    my $attachment = Bugzilla::Attachment->new($attach_id);
+
+    # The check on attachment_is_visible here is to prevent a tiny
+    # information leak where someone could check if a private
+    # attachment was a patch by creating text that would get linkified
+    # differently. Likely excess paranoia
+    return (defined($attachment) &&
+            attachment_is_visible($attachment) &&
+            $attachment->ispatch());
+}
+
+sub _get_review_url {
+    my ($bug, $attach_id, $absolute) = @_;
+    my $base = Bugzilla->params()->{'splinter_base'};
+    my $bug_id = $bug->id();
+
+    if ($absolute) {
+	my $urlbase = correct_urlbase();
+
+	$urlbase =~ s!/$!! if $base =~ "^/";
+	$base = $urlbase . $base;
+    }
+
+    if ($base =~ /\?/) {
+        return "$base&bug=$bug_id&attachment=$attach_id";
+    } else {
+        return "$base?bug=$bug_id&attachment=$attach_id";
+    }
+}
+
+sub _get_review_link {
+    my ($bug, $attach_id, $link_text) = @_;
+
+    return "<a href='" . html_quote(_get_review_url($bug, $attach_id)) . "'>$link_text</a>";
+}
 
 sub format_the_comment {
     my ($bug, $regexes, $text) = @_;
@@ -48,8 +87,8 @@ sub format_the_comment {
     # regular expression we return from the hook.
     ${$text} =~ s~((?:^Created\ |\b)attachment\s+(\d+)(\s\[details\])?)
                  ~(push(@$regexes, { match => qr/__REVIEW__$2/,
-                                     replace => get_review_link($bug, "$2", "[review]") })) &&
-                  (attachment_id_is_patch($2) ? "$1 __REVIEW__$2" : $1)
+                                     replace => _get_review_link($bug, "$2", "[review]") })) &&
+                  (_attachment_id_is_patch($2) ? "$1 __REVIEW__$2" : $1)
                  ~egmx;
 
     # And linkify "Review of attachment", this is less of a workaround since
@@ -58,7 +97,7 @@ sub format_the_comment {
     # get the same link.
     if (${$text} =~ $REVIEW_RE) {
         my $attachment_id = $1;
-        my $review_link = get_review_link($bug, $attachment_id, "Review");
+        my $review_link = _get_review_link($bug, $attachment_id, "Review");
         my $attach_link = Bugzilla::Template::get_attachment_link($attachment_id, "attachment $attachment_id");
 
         push(@$regexes, { 'match' => $REVIEW_RE,
@@ -70,6 +109,59 @@ sub add_panel {
     my ($modules) = @_;
 
     $modules->{'Splinter'} = "Bugzilla::Extension::Splinter::Params";
+}
+
+sub _munge_create_attachment {
+    my ($bug, $intro_text, $attach_id, $view_link) = @_;
+
+    if (_attachment_id_is_patch ($attach_id)) {
+	return ("$intro_text" .
+                " View: $view_link\015\012" .
+                " Review: " . _get_review_url($bug, $attach_id, 1) . "\015\012");
+    } else {
+	return ("$intro_text" .
+                " --> ($view_link)");
+    }
+}
+
+# This adds review links into a bug mail before we send it out.  Since
+# this is happening after newlines have been converted into RFC-2822
+# style \r\n, we need handle line ends carefully.  (\015 and \012 are
+# used because Perl \n is platform-dependent)
+sub add_review_links_to_email {
+    my ($email) = @_;
+    my $body = $email->body();
+    my $new_body = undef;
+    my $bug = undef;
+
+    if ($email->header('Subject') =~ /^\[Bug\s+(\d+)\]/)
+    {
+        my $bug_id = $1;
+
+        if (Bugzilla->user()->can_see_bug($bug_id)) {
+            $bug = Bugzilla::Bug->new($bug_id);
+        }
+    }
+
+    return unless defined($bug);
+
+    if ($body =~ /Review\s+of\s+attachment\s+\d+\s*:/) {
+        $body =~ s~(Review\s+of\s+attachment\s+(\d+)\s*:)
+                  ~"$1\015\012 --> (" . _get_review_url($bug, $2, 1) . ")"
+                  ~egx;
+        $new_body = 1;
+    }
+
+    # TODO: Figure out the email format.
+    if ($body =~ /Created attachment [0-9]+\015\012 --> /) {
+        $body =~ s~(Created\ attachment\ ([0-9]+)\015\012)
+                   \ -->\ \(([^\015\012]*)\)[^\015\012]*
+                  ~_munge_create_attachment($bug, $1, $2, $3)
+                  ~egx;
+        $new_body = 1;
+    }
+
+    $email->body_set($body) if $new_body;
 }
 
 sub maybe_get_statuses {
@@ -94,3 +186,5 @@ sub add_dispatch {
 
     $dispatches->{'Splinter'} = "Bugzilla::Extension::Splinter::WebService";
 }
+
+1;
