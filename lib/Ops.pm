@@ -39,14 +39,14 @@ sub format_the_comment {
     # TODO: This is probably used in more places. Avoid redundancy.
     my $REVIEW_RE = qr/Review\s+of\s+attachment\s+(\d+)\s*:/;
 
-    # Add [review] link to the end of "Created an attachment" comments
+    # Add [review] link to the end of "Created attachment" comments
     #
     # We need to work around the way that the hook works, which is
     # intended to avoid overlapping matches, since we *want* an
-    # overlapping match here (the normal handling of "Created an
+    # overlapping match here (the normal handling of "Created
     # attachment"), so we add in dummy text and then replace in the
     # regular expression we return from the hook.
-    ${$text} =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\)(\s\[edit\])?)
+    ${$text} =~ s~((?:^Created\ |\b)attachment\s+(\d+)(\s\[details\])?)
                  ~(push(@$regexes, { match => qr/__REVIEW__$2/,
                                      replace => get_review_link($bug, "$2", "[review]") })) &&
                   (attachment_id_is_patch($2) ? "$1 __REVIEW__$2" : $1)
