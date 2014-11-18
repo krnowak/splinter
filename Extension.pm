@@ -24,9 +24,7 @@ use strict;
 use warnings;
 use base qw(Bugzilla::Extension);
 
-# This code for this is in ./extensions/Splinter/lib/Util.pm
 use Bugzilla::Extension::Splinter::Ops;
-use Bugzilla::Extension::Splinter::SplinterUtil;
 
 our $VERSION = '0.01';
 

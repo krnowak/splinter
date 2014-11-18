@@ -19,13 +19,13 @@
 # Contributor(s):
 #   Owen Taylor <otaylor@fishsoup.net>
 
-package extensions::splinter::lib::SplinterUtil;
+package Bugzilla::Extension::Splinter::Util;
 
 use Bugzilla;
 use Bugzilla::Util;
 
 use base qw(Exporter);
-@extensions::splinter::lib::SplinterUtil::EXPORT = qw(attachment_is_visible);
+our @EXPORT = qw(attachment_is_visible);
 
 # Checks if the current user can see an attachment
 # Based on code from attachment.cgi

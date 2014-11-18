@@ -27,7 +27,7 @@ use Bugzilla::Util;
 use base qw(Exporter);
 our @EXPORT = qw(check_can_access);
 
-use Bugzilla::Extension::Splinter::SplinterUtil;
+use Bugzilla::Extension::Splinter::Util;
 
 # Make sure the current user has access to the specified attachment;
 # Based on cut-and-paste from attachment.cgi

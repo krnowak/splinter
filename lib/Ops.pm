@@ -33,7 +33,7 @@ our @EXPORT = qw(
     add_dispatch
 );
 
-use Bugzilla::Extension::Splinter::SplinterUtil;
+use Bugzilla::Extension::Splinter::Util;
 
 sub _attachment_id_is_patch {
     my ($attach_id) = @_;
