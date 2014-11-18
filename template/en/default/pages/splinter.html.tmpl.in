@@ -42,6 +42,79 @@
   configNote = '';
 </script>
 
-@@BODY@@
+<!--[if lt IE 7]>
+<p style="border: 1px solid #880000; padding: 1em; background: #ffee88; font-size: 120%;">
+   Splinter Patch Review requires a modern browser, such as
+   <a href="http://www.firefox.com">Firefox</a>, for correct operation.
+</p>
+<![endif]-->
+<div id="error" style="display: none;"> </div>
+<div id="navigation" style="display: none;"></div>
+<div id="bugInfo" style="display: none;">
+  Bug <span id="bugId"></span> -
+  <span id="bugShortDesc"></span> -
+  <span id="bugReporter"></span> -
+  <span id="bugCreationDate"></span>
+</div>
+<div id="loading">Loading....</div>
+<div id="enterBug" style="display: none;">
+  Bug to review:
+  <input id="enterBugInput" />
+  <input id="enterBugGo" type="button" value="Go" />
+  <div id="chooseReview" style="display: none;">
+     Drafts and published reviews:
+    <table>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div id="chooseAttachment" style="display: none;">
+  Choose patch attachment to review:
+  <table>
+    <tbody>
+    </tbody>
+  </table>
+  <a id="originalBugLink">Go to bug</a>
+  <a id="allReviewsLink">Your reviews</a>
+</div>
+<div id="overview" style="display: none;">
+  <div id="patchIntro">
+  </div>
+  <div>
+    <span class="review-title">
+      Your Review
+    </span>
+    <span id="restored" style="display: none;">
+      (Restored from draft; last edited <span id="restoredLastModified"></span>)
+    </span>
+  </div>
+  <div>
+    <div id="myCommentFrame">
+      <textarea id="myComment"></textarea>
+      <div id="emptyCommentNotice">&lt;Overall Comment&gt;</div>
+    </div>
+    <div id="myPatchComments"></div>
+    <div id="buttonBox">
+      <span id="attachmentStatusSpan">Patch Status:
+	<select id="attachmentStatus"> </select>
+      </span>
+      <input id="publishButton" type="button" value="Publish" />
+      <input id="cancelButton" type="button" value="Cancel" />
+    </div>
+    <div class="clear"></div>
+  </div>
+  <div id="oldReviews" style="display: none;">
+    <div class="review-title">
+      Previous Reviews
+    </div>
+  </div>
+</div>
+<div id="files" style="display: none;"></div>
+<div id="credits" style="display: none;">
+  Powered by <a href="http://fishsoup.net/software/splinter">Splinter</a> |
+  <a id='helpLink' target='splinterHelp'>Help</a>
+</div>
+<div id="saveDraftNotice" style="display: none;"></div>
 
 [% PROCESS global/footer.html.tmpl %]
