@@ -16,7 +16,7 @@
 #                  Max Kanat-Alexander <mkanat@bugzilla.org>
 #                  Owen Taylor <otaylor@fishsoup.net>
 
-package extensions::splinter::lib::WSSplinter;
+package Bugzilla::Extension::Splinter::WebService;
 use strict;
 use warnings;
 
