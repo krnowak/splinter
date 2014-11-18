@@ -54,10 +54,10 @@ sub _get_review_url {
     my $bug_id = $bug->id();
 
     if ($absolute) {
-	my $urlbase = correct_urlbase();
+        my $urlbase = correct_urlbase();
 
-	$urlbase =~ s!/$!! if $base =~ "^/";
-	$base = $urlbase . $base;
+        $urlbase =~ s!/$!! if $base =~ "^/";
+        $base = $urlbase . $base;
     }
 
     if ($base =~ /\?/) {
@@ -115,11 +115,11 @@ sub _munge_create_attachment {
     my ($bug, $intro_text, $attach_id, $view_link) = @_;
 
     if (_attachment_id_is_patch ($attach_id)) {
-	return ("$intro_text" .
+        return ("$intro_text" .
                 " View: $view_link\015\012" .
                 " Review: " . _get_review_url($bug, $attach_id, 1) . "\015\012");
     } else {
-	return ("$intro_text" .
+        return ("$intro_text" .
                 " --> ($view_link)");
     }
 }

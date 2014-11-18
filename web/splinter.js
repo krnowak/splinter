@@ -953,7 +953,7 @@ Review.Review.prototype = {
 
     // cf. parsing in Patch.Patch._init()
     parse : function(text) {
-	Review.FILE_START_RE.lastIndex = 0;
+        Review.FILE_START_RE.lastIndex = 0;
         var m = Review.FILE_START_RE.exec(text);
 
         var intro;
@@ -1104,13 +1104,13 @@ Review.Review.prototype = {
             str += '\n';
         }
 
-	var first = this.intro == null;
+        var first = this.intro == null;
         for (var i = 0; i < this.files.length; i++) {
             var file = this.files[i];
             if (file.comments.length > 0) {
-		if (first)
+                if (first)
                     first = false;
-		else
+                else
                     str += '\n';
                 str += file.toString();
             }
@@ -2145,13 +2145,13 @@ function addPatchFile(file) {
     switch (file.status) {
     case Patch.ADDED:
         statusString = " (new file)";
-	break;
+        break;
     case Patch.REMOVED:
         statusString = " (removed)";
-	break;
+        break;
     case Patch.CHANGED:
         statusString = "";
-	break;
+        break;
     }
 
     $("<div class='file-label'>"
