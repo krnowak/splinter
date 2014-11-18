@@ -2677,7 +2677,13 @@ function init() {
                    data: {
                        id: attachmentId
                    },
-                   success: gotAttachment,
+                   success: function(text) {
+                       try {
+                           gotAttachment(text)
+                       } catch (e) {
+                           displayError("Failed to parse attachment " + attachmentId + ": " + e);
+                       }
+                   },
                    error: function(a, b, c) {
                        displayError("Failed to retrieve attachment " + attachmentId);
                    }
