@@ -59,12 +59,12 @@ sub publish_review {
 
     my $attachment_status = $params->{attachment_status};
     if (defined $attachment_status) {
-        my $field_object = new Bugzilla::Field({ name => 'attachments.status' });
+        my $field_object = Bugzilla::Field->new({ name => 'attachments.status' });
         my $legal_values = [map { $_->name } @{ $field_object->legal_values }];
         check_field('attachments.status', $attachment_status, $legal_values);
     }
 
-    my $attachment = new Bugzilla::Attachment($params->{attachment_id});
+    my $attachment = Bugzilla::Attachment->new($params->{attachment_id});
     defined $attachment
         || ThrowUserError("invalid_attach_id",
                           { attach_id => $params->{attachment_id} });
@@ -74,7 +74,7 @@ sub publish_review {
     # allow it.
     check_can_access($attachment);
 
-    my $bug = new Bugzilla::Bug($attachment->bug_id);
+    my $bug = Bugzilla::Bug->new($attachment->bug_id);
 
     Bugzilla->user->can_edit_product($bug->product_id)
         || ThrowUserError("product_edit_denied", {product => $bug->product});
@@ -104,7 +104,7 @@ sub publish_review {
                   WHERE   attach_id   = ?",
                   undef, ($attachment_status, $timestamp, $attachment->id));
 
-        my $updated_attachment = new Bugzilla::Attachment($attachment->id);
+        my $updated_attachment = Bugzilla::Attachment->new($attachment->id);
 
         if ($attachment->status ne $updated_attachment->status) {
             my $fieldid = get_field_id('attachments.status');
