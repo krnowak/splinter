@@ -26,18 +26,19 @@ use warnings;
 
 use Bugzilla::Config::Common;
 
-our $sortkey = 30;
+our $sortkey = 1500;
 
 sub get_param_list {
     my ($class) = @_;
 
     my @param_list = (
-    {
-        name => 'splinter_base',
-        type => 't',
-        default => '/page.cgi?id=splinter.html',
-    },
+        {
+            'name' => 'splinter_base',
+            'type' => 't',
+            'default' => '/page.cgi?id=splinter.html',
+        },
     );
+
     return @param_list;
 }
 
