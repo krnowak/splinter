@@ -30,10 +30,11 @@ our @EXPORT = qw(attachment_is_visible);
 # Checks if the current user can see an attachment
 # Based on code from attachment.cgi
 sub attachment_is_visible {
-    my $attachment = shift;
+    my ($attachment) = @_;
+    my $user = Bugzilla->user();
 
-    return (Bugzilla->user->can_see_bug($attachment->bug->id) &&
-            (!$attachment->isprivate ||
-             Bugzilla->user->id == $attachment->attacher->id ||
-             Bugzilla->user->is_insider));
+    return ($user->can_see_bug($attachment->bug()->id()) &&
+            (!$attachment->isprivate() ||
+             $user->id == $attachment->attacher()->id() ||
+             $user->is_insider()));
 }
