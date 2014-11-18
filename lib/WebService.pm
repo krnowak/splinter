@@ -125,7 +125,7 @@ sub publish_review {
     $dbh->bz_commit_transaction();
 
     # Send mail.
-    Bugzilla::BugMail::Send($bug->bug_id, { changer => Bugzilla->user->login });
+    Bugzilla::BugMail::Send($bug->bug_id, { changer => Bugzilla->user() });
 
     # Nothing very interesting to return on success, so just return an empty structure
     return {};
