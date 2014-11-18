@@ -38,3 +38,5 @@ sub attachment_is_visible {
              $user->id == $attachment->attacher()->id() ||
              $user->is_insider()));
 }
+
+1;
