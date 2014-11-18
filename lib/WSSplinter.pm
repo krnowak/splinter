@@ -31,24 +31,6 @@ use Bugzilla::Extension::Splinter::WebServiceUtil;
 
 use base qw(Bugzilla::WebService);
 
-sub info {
-    my $user = Bugzilla->login;
-
-    my $results = {
-	version => 1
-    };
-
-    if ($user->login ne '') {
-	$results->{'logged_in'} = 1;
-	$results->{'login'} = $user->login;
-	$results->{'name'} = $user->name;
-    } else {
-	$results->{'logged_in'} = 0;
-    }
-
-    return $results;
-}
-
 # The idea of this method is to be able to
 #
 #  - Add a comment with says "Review of attachment <id>:" rather than
