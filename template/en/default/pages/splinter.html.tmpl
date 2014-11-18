@@ -35,11 +35,11 @@
   ];
 
   configBase = '[% Param('splinter_base') FILTER js %]';
-  $(function() { init(); });
-  configBugzillaUrl = '/';
+  configBugzillaUrl = '[% Param('urlbase') FILTER js %]';
   configHaveExtension = true;
   configHelp = 'page.cgi?id=splinter/help.html';
   configNote = '';
+  $(function() { init(); });
 </script>
 
 <!--[if lt IE 7]>

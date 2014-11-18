@@ -1562,7 +1562,7 @@ function updateAttachmentStatus(attachment, newStatus, success, failure) {
                    }
                },
                type: 'POST',
-               url: "/attachment.cgi"
+               url: configBugzillaUrl + 'attachment.cgi'
            });
 }
 
@@ -1589,7 +1589,7 @@ function addComment(bug, comment, success, failure) {
                    }
                },
                type: 'POST',
-               url: "/process_bug.cgi"
+               url: configBugzillaUrl + 'process_bug.cgi'
            });
 }
 
@@ -1618,7 +1618,7 @@ function publishReview() {
             params['attachment_status'] = newStatus;
 
         XmlRpc.call({
-                        url: '/xmlrpc.cgi',
+                        url: configBugzillaUrl + 'xmlrpc.cgi',
                         name: 'Splinter.publish_review',
                         params: params,
                         error: function(message) {
@@ -2647,7 +2647,7 @@ function init() {
         $.ajax({
                    type: 'GET',
                    dataType: 'xml',
-                   url: '/show_bug.cgi',
+                   url: configBugzillaUrl + 'show_bug.cgi',
                    data: {
                        id: bugId,
                        ctype: 'xml',
@@ -2673,7 +2673,7 @@ function init() {
         $.ajax({
                    type: 'GET',
                    dataType: 'text',
-                   url: '/attachment.cgi',
+                   url: configBugzillaUrl + 'attachment.cgi',
                    data: {
                        id: attachmentId
                    },
