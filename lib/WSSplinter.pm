@@ -27,7 +27,7 @@ use Bugzilla::Constants;
 use Bugzilla::Field;
 use Bugzilla::Util qw(trim);
 
-use extensions::splinter::lib::SplinterUtil;
+use Bugzilla::Extension::Splinter::WebServiceUtil;
 
 use base qw(Bugzilla::WebService);
 
@@ -47,19 +47,6 @@ sub info {
     }
 
     return $results;
-}
-
-# Make sure the current user has access to the specified attachment;
-# Based on cut-and-paste from attachment.cgi
-sub check_can_access {
-    my $attachment = shift;
-
-    if (!attachment_is_visible ($attachment))
-    {
-        ThrowUserError('auth_failure', {action => 'access',
-                                        object => 'attachment'});
-    }
-    return 1;
 }
 
 # The idea of this method is to be able to
