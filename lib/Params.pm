@@ -20,13 +20,13 @@
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Owen Taylor <otaylor@redhat.com>
 
-package extensions::splinter::lib::ConfigSplinter;
+package Bugzilla::Extension::Splinter::Params;
 use strict;
 use warnings;
 
 use Bugzilla::Config::Common;
 
-$extensions::splinter::lib::ConfigSplinter::sortkey = 30;
+our $sortkey = 30;
 
 sub get_param_list {
     my ($class) = @_;
