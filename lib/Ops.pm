@@ -29,11 +29,12 @@ our @EXPORT = qw(
     format_the_comment
     add_panel
     add_review_links_to_email
-    maybe_get_statuses
+    maybe_setup_vars_for_page
     add_dispatch
 );
 
 use Bugzilla::Extension::Splinter::Util;
+use Bugzilla::Util;
 
 sub _attachment_id_is_patch {
     my ($attach_id) = @_;
@@ -164,7 +165,7 @@ sub add_review_links_to_email {
     $email->body_set($body) if $new_body;
 }
 
-sub maybe_get_statuses {
+sub maybe_setup_vars_for_page {
     my ($page, $vars) = @_;
 
     if ($page eq 'splinter.html') {
@@ -178,6 +179,7 @@ sub maybe_get_statuses {
             @statuses = map { $_->name } @{ $field_object->legal_values };
         }
         $vars->{'attachment_statuses'} = \@statuses;
+        $vars->{'urlbase'} = correct_urlbase();
     }
 }
 

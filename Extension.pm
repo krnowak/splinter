@@ -63,7 +63,7 @@ sub page_before_template {
     my $page = $args->{'page_id'};
     my $vars = $args->{'vars'};
 
-    maybe_get_statuses($page, $vars);
+    maybe_setup_vars_for_page($page, $vars);
 }
 
 sub webservice {
